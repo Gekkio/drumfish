@@ -9,6 +9,9 @@
 
 	<artifactId>drumfish-validation</artifactId>
 	<name>Drumfish :: Validation</name>
+	<description>
+		Drumfish Validation contains a validation API and implementation inspired by ideas used in functional programming languages.
+	</description>
 
 	<dependencies>
 		<!-- *** Internal dependencies *** -->

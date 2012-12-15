@@ -9,6 +9,9 @@
 
 	<artifactId>drumfish-lang</artifactId>
 	<name>Drumfish :: Lang</name>
+	<description>
+		Drumfish Lang contains low-level utility libraries inspired by ideas used in functional programming languages.
+	</description>
 
 	<dependencies>
 		<!-- *** External dependencies *** -->
