@@ -6,14 +6,15 @@ import com.google.common.base.Predicate;
 
 /**
  * Predicates for Option objects.
+ * <p>
+ * All objects returned by the methods are serializable if all the method parameters are too.
  */
 public final class OptionPredicates {
 
     private OptionPredicates() {
     }
 
-    static class IsDefinedPredicate implements Predicate<Option<? extends Object>>, Serializable {
-
+    private static final class IsDefinedPredicate implements Predicate<Option<? extends Object>>, Serializable {
         private static final long serialVersionUID = -4799134802946996403L;
 
         public static final IsDefinedPredicate INSTANCE = new IsDefinedPredicate();

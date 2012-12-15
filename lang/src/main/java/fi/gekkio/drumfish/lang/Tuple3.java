@@ -2,6 +2,8 @@ package fi.gekkio.drumfish.lang;
 
 import java.io.Serializable;
 
+import javax.annotation.Nullable;
+
 import lombok.val;
 import lombok.experimental.Value;
 
@@ -17,7 +19,6 @@ import lombok.experimental.Value;
  */
 @Value
 public class Tuple3<A, B, C> implements Serializable {
-
     private static final long serialVersionUID = -355430479757610793L;
 
     /**
@@ -31,7 +32,7 @@ public class Tuple3<A, B, C> implements Serializable {
      *            third value
      * @return constructed Tuple3 instance
      */
-    public static <A, B, C> Tuple3<A, B, C> of(A a, B b, C c) {
+    public static <A, B, C> Tuple3<A, B, C> of(@Nullable A a, @Nullable B b, @Nullable C c) {
         return new Tuple3<A, B, C>(a, b, c);
     }
 
@@ -75,6 +76,7 @@ public class Tuple3<A, B, C> implements Serializable {
         return Tuple2.of(a, c);
     }
 
+    @Override
     public String toString() {
         val sb = new StringBuilder();
         sb.append('(');

@@ -201,7 +201,7 @@ public abstract class Either<L, R> implements Serializable {
 
         @AllArgsConstructor
         @NoArgsConstructor
-        private static class SerializedForm implements Externalizable {
+        private static final class SerializedForm implements Externalizable {
             private Object value;
 
             @Override
@@ -264,7 +264,7 @@ public abstract class Either<L, R> implements Serializable {
 
         @AllArgsConstructor
         @NoArgsConstructor
-        private static class SerializedForm implements Externalizable {
+        private static final class SerializedForm implements Externalizable {
             private Object value;
 
             @Override

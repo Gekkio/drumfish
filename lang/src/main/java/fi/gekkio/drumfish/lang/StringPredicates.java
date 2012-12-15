@@ -6,13 +6,15 @@ import com.google.common.base.Predicate;
 
 /**
  * Predicates for String objects.
+ * <p>
+ * All objects returned by the methods are serializable if all the method parameters are too.
  */
 public final class StringPredicates {
 
     private StringPredicates() {
     }
 
-    static class IsEmptyPredicate implements Predicate<String>, Serializable {
+    private static class IsEmptyPredicate implements Predicate<String>, Serializable {
         private static final long serialVersionUID = -1705328419251983539L;
 
         public static final IsEmptyPredicate INSTANCE = new IsEmptyPredicate();

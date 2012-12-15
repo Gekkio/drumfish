@@ -6,6 +6,8 @@ import com.google.common.base.Function;
 
 /**
  * Functions for Tuple3 objects.
+ * <p>
+ * All objects returned by the methods are serializable if all the method parameters are too.
  */
 public final class Tuple3Functions {
 
@@ -20,7 +22,7 @@ public final class Tuple3Functions {
      * @return function
      */
     public static <A, B, C> Function<Tuple3<A, B, C>, Tuple3<A, B, C>> withA(final A a) {
-        class WithAFunction implements Function<Tuple3<A, B, C>, Tuple3<A, B, C>>, Serializable {
+        final class WithAFunction implements Function<Tuple3<A, B, C>, Tuple3<A, B, C>>, Serializable {
             private static final long serialVersionUID = 3715349024733990454L;
 
             @Override
@@ -54,7 +56,7 @@ public final class Tuple3Functions {
      * @return function
      */
     public static <A, B, C> Function<Tuple3<A, B, C>, Tuple3<A, B, C>> withB(final B b) {
-        class WithBFunction implements Function<Tuple3<A, B, C>, Tuple3<A, B, C>>, Serializable {
+        final class WithBFunction implements Function<Tuple3<A, B, C>, Tuple3<A, B, C>>, Serializable {
             private static final long serialVersionUID = -1119766957347856671L;
 
             @Override
@@ -88,7 +90,7 @@ public final class Tuple3Functions {
      * @return function
      */
     public static <A, B, C> Function<Tuple3<A, B, C>, Tuple3<A, B, C>> withC(final C c) {
-        class WithCFunction implements Function<Tuple3<A, B, C>, Tuple3<A, B, C>>, Serializable {
+        final class WithCFunction implements Function<Tuple3<A, B, C>, Tuple3<A, B, C>>, Serializable {
             private static final long serialVersionUID = 3218222630256860618L;
 
             @Override

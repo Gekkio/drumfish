@@ -6,13 +6,15 @@ import com.google.common.base.Function;
 
 /**
  * Functions for Option objects.
+ * <p>
+ * All objects returned by the methods are serializable if all the method parameters are too.
  */
 public final class OptionFunctions {
 
     private OptionFunctions() {
     }
 
-    static class GetValueFunction<T> implements Function<Option<? extends T>, T>, Serializable {
+    private static final class GetValueFunction<T> implements Function<Option<? extends T>, T>, Serializable {
         private static final long serialVersionUID = 5753367640741973339L;
 
         @SuppressWarnings("rawtypes")
@@ -34,7 +36,7 @@ public final class OptionFunctions {
         return GetValueFunction.INSTANCE;
     }
 
-    static class OptionFunction<T> implements Function<T, Option<T>>, Serializable {
+    private static final class OptionFunction<T> implements Function<T, Option<T>>, Serializable {
         private static final long serialVersionUID = -7512216163114972210L;
 
         @SuppressWarnings("rawtypes")

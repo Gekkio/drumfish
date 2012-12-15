@@ -2,6 +2,9 @@ package fi.gekkio.drumfish.lang;
 
 import java.io.Serializable;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import lombok.RequiredArgsConstructor;
 
 import com.google.common.base.Function;
@@ -9,9 +12,9 @@ import com.google.common.base.Function;
 /**
  * Utilities for Effect objects.
  * <p>
- * All {@link Effect} and {@link Function} objects returned by the methods are serializable if all the method parameters
- * are too.
+ * All objects returned by the methods are serializable if all the method parameters are too.
  */
+@ParametersAreNonnullByDefault
 public final class Effects {
 
     private Effects() {
@@ -27,7 +30,7 @@ public final class Effects {
      * @return function
      */
     public static <T> Function<T, Void> toFunction(final Effect<T> e) {
-        class EffectFunction implements Function<T, Void>, Serializable {
+        final class EffectFunction implements Function<T, Void>, Serializable {
             private static final long serialVersionUID = -4601876026894597505L;
 
             @Override
@@ -47,7 +50,7 @@ public final class Effects {
      * @return effect
      */
     public static <T> Effect<T> fromFunction(final Function<? super T, ?> f) {
-        class FromFunctionEffect implements Effect<T>, Serializable {
+        final class FromFunctionEffect implements Effect<T>, Serializable {
             private static final long serialVersionUID = -8381630600993099590L;
 
             @Override
@@ -66,7 +69,7 @@ public final class Effects {
      * @return effect
      */
     public static Effect<Object> fromRunnable(final Runnable r) {
-        class FromRunnableEffect implements Effect<Object>, Serializable {
+        final class FromRunnableEffect implements Effect<Object>, Serializable {
             private static final long serialVersionUID = 7869061388649838159L;
 
             @Override
@@ -77,8 +80,7 @@ public final class Effects {
         return new FromRunnableEffect();
     }
 
-    static class NoopEffect implements Effect<Object>, Serializable {
-
+    private static final class NoopEffect implements Effect<Object>, Serializable {
         private static final long serialVersionUID = -6608178536760540031L;
 
         public static final NoopEffect INSTANCE = new NoopEffect();
@@ -106,12 +108,12 @@ public final class Effects {
      * @return effect
      */
     @SuppressWarnings("unchecked")
-    public static <T> Effect<T> noop(Class<T> clazz) {
+    public static <T> Effect<T> noop(@Nullable Class<T> clazz) {
         return (Effect<T>) NoopEffect.INSTANCE;
     }
 
     @RequiredArgsConstructor
-    static class SystemOutEffect implements Effect<Object>, Serializable {
+    private static final class SystemOutEffect implements Effect<Object>, Serializable {
         private static final long serialVersionUID = 5986895017772281905L;
 
         public final String prefix;
@@ -145,8 +147,7 @@ public final class Effects {
     }
 
     @RequiredArgsConstructor
-    static class SystemErrEffect implements Effect<Object>, Serializable {
-
+    private static final class SystemErrEffect implements Effect<Object>, Serializable {
         private static final long serialVersionUID = -635378664192791635L;
 
         public final String prefix;

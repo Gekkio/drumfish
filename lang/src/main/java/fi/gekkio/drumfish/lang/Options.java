@@ -3,11 +3,17 @@ package fi.gekkio.drumfish.lang;
 import java.io.Serializable;
 import java.util.Iterator;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
 
 /**
  * Utilities for Option objects.
+ * <p>
+ * All objects returned by the methods are serializable if all the method parameters are too.
  */
+@ParametersAreNonnullByDefault
 public final class Options {
 
     private Options() {
@@ -22,6 +28,7 @@ public final class Options {
      * @return iterator with 0..n values
      */
     public static <T> Iterator<T> flatten(final Iterator<Option<T>> iterator) {
+        Preconditions.checkNotNull(iterator, "iterator cannot be null");
         final class FlatteningIterator extends AbstractIterator<T> implements Serializable {
             private static final long serialVersionUID = -7316062488298537910L;
 
@@ -47,6 +54,7 @@ public final class Options {
      * @return iterable with 0..n values
      */
     public static <T> Iterable<T> flatten(final Iterable<Option<T>> iterable) {
+        Preconditions.checkNotNull(iterable, "iterable cannot be null");
         final class FlatteningIterable implements Iterable<T>, Serializable {
             private static final long serialVersionUID = 4441232518997394186L;
 

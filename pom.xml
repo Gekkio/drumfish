@@ -17,7 +17,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<guava.version>13.0.1</guava.version>
-		<jcip.annotations.version>1.0</jcip.annotations.version>
+		<jsr305.version>2.0.1</jsr305.version>
 		<junit.version>4.11</junit.version>
 		<lombok.version>0.11.6</lombok.version>
 		<mockito.version>1.9.5</mockito.version>
@@ -146,6 +146,11 @@
 			</dependency>
 			<!-- *** External dependencies *** -->
 			<dependency>
+				<groupId>com.google.code.findbugs</groupId>
+				<artifactId>jsr305</artifactId>
+				<version>${jsr305.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>com.google.guava</groupId>
 				<artifactId>guava</artifactId>
 				<version>${guava.version}</version>
@@ -154,11 +159,6 @@
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
 				<version>${junit.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>net.jcip</groupId>
-				<artifactId>jcip-annotations</artifactId>
-				<version>${jcip.annotations.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.mockito</groupId>

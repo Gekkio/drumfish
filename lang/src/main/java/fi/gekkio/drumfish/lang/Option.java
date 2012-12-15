@@ -9,12 +9,17 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.concurrent.Callable;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
@@ -22,6 +27,8 @@ import com.google.common.collect.Iterators;
 
 /**
  * A generic 0-or-1 container.
+ * <p>
+ * Similar in many ways to Guava {@link Optional} and Java 8 {@code java.util.Optional}.
  * 
  * <h3>Usage examples</h3>
  * 
@@ -88,8 +95,8 @@ import com.google.common.collect.Iterators;
  * @param <T>
  *            underlying type
  */
+@ParametersAreNonnullByDefault
 public abstract class Option<T> implements Iterable<T>, Serializable {
-
     private static final long serialVersionUID = -2847406469172844207L;
 
     /**
@@ -104,7 +111,7 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
      * @return Some(value) if value is instanceof clazz, None otherwise
      */
     @SuppressWarnings("unchecked")
-    public static <A> Option<A> requireType(final Object value, final Class<A> clazz) {
+    public static <A> Option<A> requireType(@Nullable final Object value, final Class<A> clazz) {
         if (value == null || !clazz.isAssignableFrom(value.getClass())) {
             return none();
         }
@@ -133,7 +140,7 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
      * @return an empty Option
      */
     @SuppressWarnings("unchecked")
-    public static <A> Option<A> none(final Class<A> clazz) {
+    public static <A> Option<A> none(@Nullable final Class<A> clazz) {
         return None.INSTANCE;
     }
 
@@ -198,7 +205,7 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
      *            underlying value
      * @return None if value is null, Some(value) otherwise
      */
-    public static <A> Option<A> option(final A value) {
+    public static <A> Option<A> option(@Nullable final A value) {
         if (value == null) {
             return none();
         } else {
@@ -244,6 +251,14 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
     public abstract <O> Option<O> flatMap(Function<? super T, ? extends Option<O>> function);
 
     /**
+     * Executes the given side-effect with the contained value if it exists.
+     * 
+     * @param e
+     *            effect
+     */
+    public abstract void foreach(Effect<? super T> e);
+
+    /**
      * Returns the value in the container or if the container is empty, returns an object from the given supplier.
      * 
      * @param defaultValueSupplier
@@ -266,6 +281,7 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
      * 
      * @return value from container or null
      */
+    @CheckForNull
     public abstract T getOrNull();
 
     /**
@@ -353,7 +369,6 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
     public abstract <R> Either<T, R> toLeft(R rightValue);
 
     private static final class None<T> extends Option<T> {
-
         @SuppressWarnings("rawtypes")
         private static final None INSTANCE = new None();
 
@@ -381,6 +396,10 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
         @Override
         public <O> Option<O> flatMap(final Function<? super T, ? extends Option<O>> function) {
             return Option.none();
+        }
+
+        @Override
+        public void foreach(Effect<? super T> e) {
         }
 
         @Override
@@ -477,7 +496,6 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
     @RequiredArgsConstructor
     @EqualsAndHashCode(callSuper = false)
     private static final class Some<T> extends Option<T> {
-
         private static final long serialVersionUID = 2862031508691460175L;
 
         private final T value;
@@ -503,6 +521,12 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
         public <O> Option<O> flatMap(final Function<? super T, ? extends Option<O>> function) {
             Preconditions.checkNotNull(function, "function cannot be null");
             return function.apply(value);
+        }
+
+        @Override
+        public void foreach(Effect<? super T> e) {
+            Preconditions.checkNotNull(e, "effect cannot be null");
+            e.apply(value);
         }
 
         /**
