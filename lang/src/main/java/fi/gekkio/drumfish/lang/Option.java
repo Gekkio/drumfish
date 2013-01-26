@@ -262,7 +262,7 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
      *            transformer function
      * @return f(value) if the container had a value, None otherwise
      */
-    public abstract <O> Option<O> flatMap(Function<? super T, ? extends Option<O>> function);
+    public abstract <O> Option<O> flatMap(Function<? super T, Option<O>> function);
 
     /**
      * Executes the given side-effect with the contained value if it exists.
@@ -279,7 +279,7 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
      *            default value supplier
      * @return value from container or the result of supplier.get()
      */
-    public abstract T getOrElse(Supplier<T> defaultValueSupplier);
+    public abstract T getOrElse(Supplier<? extends T> defaultValueSupplier);
 
     /**
      * Returns the value in the container or if the container is empty, returns the given parameter.
@@ -342,7 +342,7 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
      *            transformer function
      * @return Some(f(value)) if the container had a value, None otherwise
      */
-    public abstract <O> Option<O> map(Function<? super T, ? extends O> function);
+    public abstract <O> Option<O> map(Function<? super T, O> function);
 
     /**
      * Returns the container or if the container is empty, returns the given parameter.
@@ -351,7 +351,7 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
      *            default value
      * @return container or default value
      */
-    public abstract Option<T> orElse(Option<T> defaultOption);
+    public abstract Option<T> orElse(Option<? extends T> defaultOption);
 
     /**
      * Returns the container or if the container is empty, returns a container from the given supplier.
@@ -408,7 +408,7 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <O> Option<O> flatMap(final Function<? super T, ? extends Option<O>> function) {
+        public <O> Option<O> flatMap(final Function<? super T, Option<O>> function) {
             return Option.none();
         }
 
@@ -417,7 +417,7 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public T getOrElse(final Supplier<T> defaultValueSupplier) {
+        public T getOrElse(final Supplier<? extends T> defaultValueSupplier) {
             Preconditions.checkNotNull(defaultValueSupplier, "defaultValueSupplier cannot be null");
             return defaultValueSupplier.get();
         }
@@ -464,14 +464,16 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <O> Option<O> map(final Function<? super T, ? extends O> function) {
+        public <O> Option<O> map(final Function<? super T, O> function) {
             return Option.none();
         }
 
+        @SuppressWarnings("unchecked")
         @Override
-        public Option<T> orElse(final Option<T> defaultOption) {
+        public Option<T> orElse(final Option<? extends T> defaultOption) {
             Preconditions.checkNotNull(defaultOption, "defaultOption cannot be null");
-            return defaultOption;
+            // Cast is necessary and safe
+            return (Option<T>) defaultOption;
         }
 
         @Override
@@ -532,7 +534,7 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <O> Option<O> flatMap(final Function<? super T, ? extends Option<O>> function) {
+        public <O> Option<O> flatMap(final Function<? super T, Option<O>> function) {
             Preconditions.checkNotNull(function, "function cannot be null");
             return function.apply(value);
         }
@@ -547,7 +549,7 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
          * Always returns the underlying value.
          */
         @Override
-        public T getOrElse(final Supplier<T> defaultValue) {
+        public T getOrElse(final Supplier<? extends T> defaultValue) {
             return value;
         }
 
@@ -599,7 +601,7 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <O> Option<O> map(final Function<? super T, ? extends O> function) {
+        public <O> Option<O> map(final Function<? super T, O> function) {
             Preconditions.checkNotNull(function, "function cannot be null");
             return Option.<O> some(function.apply(value));
         }
@@ -608,7 +610,8 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
          * Because this is a Some, returns this instead of the defaultOption.
          */
         @Override
-        public Option<T> orElse(final Option<T> defaultOption) {
+        public Option<T> orElse(final Option<? extends T> defaultOption) {
+            Preconditions.checkNotNull(defaultOption, "defaultOption cannot be null");
             return this;
         }
 
@@ -617,6 +620,7 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
          */
         @Override
         public Option<T> orElse(final Supplier<Option<T>> defaultOptionSupplier) {
+            Preconditions.checkNotNull(defaultOptionSupplier, "defaultOptionSupplier cannot be null");
             return this;
         }
 
