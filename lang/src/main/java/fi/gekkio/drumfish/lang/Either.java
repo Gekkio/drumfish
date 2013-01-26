@@ -7,6 +7,8 @@ import java.io.ObjectOutput;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -16,13 +18,15 @@ import lombok.val;
 /**
  * Represents a value of one of two possible types (left or right).
  * <p>
- * All instances of {@code Either} are serializable, immutable, and thread-safe if the contained values are too.
+ * All instances of {@code Either} are serializable, immutable, and thread-safe if the contained values are too. Null
+ * values are not supported.
  * 
  * @param <L>
  *            type of left value
  * @param <R>
  *            type of right value
  */
+@ParametersAreNonnullByDefault
 public abstract class Either<L, R> implements Serializable {
 
     private static final long serialVersionUID = -3948035962462400570L;

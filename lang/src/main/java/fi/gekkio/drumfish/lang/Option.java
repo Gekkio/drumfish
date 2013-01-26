@@ -69,6 +69,20 @@ import com.google.common.collect.Iterators;
  * Option&lt;String&gt; value2 = empty.orElse(Option.some(&quot;default&quot;)).orElse(Option.some(&quot;not used&quot;));
  * </pre>
  * 
+ * <p>
+ * Note that the default chaining method does <em>not</em> do any kind of lazy evaluation. For example,
+ * expensiveMethodThatReturnsOption() will always be called in the following code regardless whether the option is empty
+ * or full:
+ * </p>
+ * 
+ * <pre>
+ * Option&lt;String&gt; expensiveValue = full.orElse(expensiveMethodThatReturnsOption());
+ * </pre>
+ * 
+ * <p>
+ * If you need lazy evaluation, always use the overloaded version that takes a Supplier&lt;Option&ltT&gt;&gt;.
+ * </p>
+ * 
  * <em>Value lookup</em>
  * 
  * <pre>
