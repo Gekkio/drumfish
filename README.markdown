@@ -12,7 +12,7 @@ Drumfish is licensed under the Apache License, Version 2.0.
 The primary design goals of Drumfish are compile-time safety (which includes, but is not limited to type safety) and immutability. Maximizing compile-time safety in a software project makes large-scale refactoring possible, and can provide certain safety that tests cannot provide. Favoring immutability leads to thread-safe code, and usually leads to API design where tracking side effects and mutations is extremely simple.
 
 ## What is included?
-Drumfish consists of two modules: *lang* and *validation*.
+Drumfish consists of three modules: *lang*, *frp*, and *validation*.
 
 Drumfish releases are available in Maven central under the groupId `fi.gekkio.drumfish`. Use Maven, or any Maven-compatible build tool to fetch the artifacts and include them inyour project.
 
@@ -22,6 +22,15 @@ Lang consists mainly of certain function interfaces, Option and Either types, an
     <dependency>
       <groupId>fi.gekkio.drumfish</groupId>
       <artifactId>drumfish-lang</artifactId>
+      <version>0.1.0</version>
+    </dependency>
+
+### Drumfish FRP
+FRP consists of a rich, composable API for Functional Reactive Programming.
+
+    <dependency>
+      <groupId>fi.gekkio.drumfish</groupId>
+      <artifactId>drumfish-frp</artifactId>
       <version>0.1.0</version>
     </dependency>
 

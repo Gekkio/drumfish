@@ -1,0 +1,539 @@
+package fi.gekkio.drumfish.frp;
+
+import java.io.Serializable;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
+
+import fi.gekkio.drumfish.lang.Effect;
+import fi.gekkio.drumfish.lang.Effects;
+import fi.gekkio.drumfish.lang.Function2;
+
+/**
+ * Base class for event stream implementations
+ * 
+ * @param <E>
+ *            event type
+ */
+public abstract class EventStreamBase<E> implements EventStream<E>, Serializable {
+
+    private static final long serialVersionUID = 4389299638075146452L;
+
+    @Override
+    public <U> EventStream<U> collect(final Predicate<? super E> p, final Function<? super E, U> f) {
+        Preconditions.checkNotNull(p, "predicate cannot be null");
+        Preconditions.checkNotNull(f, "function cannot be null");
+        class CollectedEventStream extends EventStreamBase<U> {
+            private static final long serialVersionUID = 8812050218207235799L;
+
+            @Override
+            public EventStream<U> foreach(final Effect<? super U> e, CancellationToken token) {
+                class CollectEffect implements Effect<E>, Serializable {
+                    private static final long serialVersionUID = 4774072719190672139L;
+
+                    @Override
+                    public void apply(E input) {
+                        if (p.apply(input))
+                            e.apply(f.apply(input));
+                    }
+                }
+                EventStreamBase.this.foreach(new CollectEffect(), token);
+                return this;
+            }
+
+        }
+        return new CollectedEventStream();
+    }
+
+    @Override
+    public EventStream<E> foreach(Effect<? super E> e) {
+        return foreach(e, CancellationToken.NONE);
+    }
+
+    @Override
+    public EventStream<E> foreach(Runnable r) {
+        return foreach(Effects.fromRunnable(r));
+    }
+
+    @Override
+    public EventStream<E> foreach(Runnable r, CancellationToken token) {
+        return foreach(Effects.fromRunnable(r), token);
+    }
+
+    @Override
+    public <U> EventStream<U> map(final Function<? super E, U> mapper) {
+        Preconditions.checkNotNull(mapper, "function cannot be null");
+        class MappedEventStream extends EventStreamBase<U> {
+            private static final long serialVersionUID = 8746853070424352228L;
+
+            @Override
+            public EventStream<U> foreach(final Effect<? super U> e, CancellationToken token) {
+                class MapperEffect implements Effect<E>, Serializable {
+                    private static final long serialVersionUID = -6599624715377023011L;
+
+                    @Override
+                    public void apply(E input) {
+                        e.apply(mapper.apply(input));
+                    }
+                }
+                EventStreamBase.this.foreach(new MapperEffect(), token);
+                return this;
+            }
+        }
+        return new MappedEventStream();
+    }
+
+    @Override
+    public <U> EventStream<U> replace(U constant) {
+        return map(Functions.constant(constant));
+    }
+
+    @Override
+    public <U> EventStream<U> map(Supplier<U> s) {
+        Preconditions.checkNotNull(s, "supplier cannot be null");
+        return map(Functions.forSupplier(s));
+    }
+
+    @Override
+    public <U> EventStream<U> map(Signal<U> s) {
+        Preconditions.checkNotNull(s, "signal cannot be null");
+        return map(Functions.forSupplier(s.asSupplier()));
+    }
+
+    @Override
+    public EventStream<E> filter(final Predicate<? super E> p) {
+        Preconditions.checkNotNull(p, "predicate cannot be null");
+        class FilteredEventStream extends EventStreamBase<E> {
+            private static final long serialVersionUID = 2518677092062764830L;
+
+            @Override
+            public EventStream<E> foreach(final Effect<? super E> e, CancellationToken token) {
+                class FilterEffect implements Effect<E>, Serializable {
+                    private static final long serialVersionUID = -7284834867826632697L;
+
+                    @Override
+                    public void apply(E input) {
+                        if (p.apply(input)) {
+                            e.apply(input);
+                        }
+                    }
+                }
+                EventStreamBase.this.foreach(new FilterEffect(), token);
+                return this;
+            }
+        }
+        return new FilteredEventStream();
+    }
+
+    @Override
+    public <U> EventStream<U> flatMap(final Function<? super E, EventStream<U>> f) {
+        Preconditions.checkNotNull(f, "function cannot be null");
+        class FlatMappedEventStream extends EventStreamBase<U> {
+            private static final long serialVersionUID = -1662566691398092407L;
+
+            @Override
+            public EventStream<U> foreach(final Effect<? super U> e, CancellationToken token) {
+                final AtomicReference<CancellationTokenSource> innerToken = new AtomicReference<CancellationTokenSource>();
+
+                class FlatMapEffect implements Effect<E>, Serializable {
+                    private static final long serialVersionUID = -3177496251373686951L;
+
+                    @Override
+                    public void apply(E input) {
+                        CancellationTokenSource newToken = new CancellationTokenSource();
+
+                        CancellationTokenSource oldToken = innerToken.getAndSet(newToken);
+                        if (oldToken != null)
+                            oldToken.cancel();
+
+                        f.apply(input).foreach(e, newToken);
+                    }
+                }
+
+                EventStreamBase.this.foreach(new FlatMapEffect(), token);
+
+                if (token.canBeCancelled()) {
+                    token.onCancel(new Runnable() {
+                        @Override
+                        public void run() {
+                            CancellationTokenSource oldToken = innerToken.getAndSet(null);
+                            if (oldToken != null)
+                                oldToken.cancel();
+                        }
+                    });
+                }
+
+                if (token.isCancelled()) {
+                    CancellationTokenSource oldToken = innerToken.getAndSet(null);
+                    if (oldToken != null)
+                        oldToken.cancel();
+                }
+
+                return this;
+            }
+        }
+        return new FlatMappedEventStream();
+    }
+
+    @Override
+    public EventStream<E> union(final EventStream<? extends E> es) {
+        return EventStreams.union(this, es);
+    }
+
+    @Override
+    public EventStream<E> distinct() {
+        class DistinctEventStream extends EventStreamBase<E> {
+            private static final long serialVersionUID = 7323926323136519568L;
+
+            private final AtomicReference<E> lastValue = new AtomicReference<E>();
+
+            @Override
+            public EventStream<E> foreach(final Effect<? super E> e, CancellationToken token) {
+                class DistinctEffect implements Effect<E>, Serializable {
+                    private static final long serialVersionUID = 6109531897034720266L;
+
+                    @Override
+                    public void apply(E input) {
+                        E previous = lastValue.getAndSet(input);
+                        if (!Objects.equal(previous, input)) {
+                            e.apply(input);
+                        }
+                    }
+                }
+                EventStreamBase.this.foreach(new DistinctEffect(), token);
+                return this;
+            }
+        }
+        return new DistinctEventStream();
+    }
+
+    @Override
+    public Signal<E> hold(E initial) {
+        return hold(initial, CancellationToken.NONE);
+    }
+
+    @Override
+    public Signal<E> hold(E initial, CancellationToken token) {
+        Preconditions.checkNotNull(token, "token cannot be null");
+        final Signal.Var<E> s = new Signal.Var<E>(initial);
+        pipeTo(s, token);
+        return s;
+    }
+
+    @Override
+    public EventStream<E> drop(final int amount) {
+        Preconditions.checkArgument(amount >= 0, "amount must be positive");
+        class DropEventStream extends EventStreamBase<E> {
+            private static final long serialVersionUID = 4078126696318463072L;
+
+            private final AtomicInteger count = new AtomicInteger(amount);
+
+            @Override
+            public EventStream<E> foreach(final Effect<? super E> e, CancellationToken token) {
+                class DropEffect implements Effect<E>, Serializable {
+                    private static final long serialVersionUID = 8355486960586782753L;
+
+                    @Override
+                    public void apply(E input) {
+                        if (count.get() > 0) {
+                            if (count.decrementAndGet() >= 0) {
+                                return;
+                            }
+                        }
+                        e.apply(input);
+                    }
+                }
+                EventStreamBase.this.foreach(new DropEffect(), token);
+                return this;
+            }
+        }
+        return new DropEventStream();
+    }
+
+    @Override
+    public EventStream<E> take(final int amount) {
+        Preconditions.checkArgument(amount >= 0, "amount must be positive");
+        class TakeEventStream extends EventStreamBase<E> {
+            private static final long serialVersionUID = -487977136605864409L;
+
+            private final AtomicInteger count = new AtomicInteger(amount);
+
+            @Override
+            public EventStream<E> foreach(final Effect<? super E> e, CancellationToken token) {
+                class TakeEffect implements Effect<E>, Serializable {
+                    private static final long serialVersionUID = -8483020072868231410L;
+
+                    @Override
+                    public void apply(E input) {
+                        if (count.get() <= 0) {
+                            return;
+                        }
+                        if (count.decrementAndGet() >= 0) {
+                            e.apply(input);
+                        }
+                    }
+                }
+                EventStreamBase.this.foreach(new TakeEffect(), token);
+                return this;
+            }
+        }
+        return new TakeEventStream();
+    }
+
+    @Override
+    public EventStream<E> dropUntil(final EventStream<?> es) {
+        Preconditions.checkNotNull(es, "event stream cannot be null");
+        class DropUntilEventStream extends EventStreamBase<E> {
+            private static final long serialVersionUID = -2737049603737761556L;
+
+            private final AtomicBoolean active = new AtomicBoolean();
+
+            @Override
+            public EventStream<E> foreach(final Effect<? super E> e, CancellationToken token) {
+                final CancellationTokenSource gateToken = new CancellationTokenSource();
+
+                class DropUntilGateEffect implements Effect<Object>, Serializable {
+                    private static final long serialVersionUID = 2741111517742942539L;
+
+                    @Override
+                    public void apply(Object input) {
+                        if (active.compareAndSet(false, true)) {
+                            gateToken.cancel();
+                        }
+                    }
+                }
+
+                class DropUntilEffect implements Effect<E>, Serializable {
+                    private static final long serialVersionUID = 2243784890063849398L;
+
+                    @Override
+                    public void apply(E input) {
+                        if (!active.get())
+                            return;
+                        e.apply(input);
+                    }
+
+                }
+
+                es.foreach(new DropUntilGateEffect(), gateToken);
+
+                if (token.canBeCancelled()) {
+                    token.onCancel(new Runnable() {
+                        @Override
+                        public void run() {
+                            gateToken.cancel();
+                        }
+                    });
+                }
+
+                if (token.isCancelled()) {
+                    gateToken.cancel();
+                }
+
+                EventStreamBase.this.foreach(new DropUntilEffect(), token);
+                return this;
+            }
+
+        }
+        return new DropUntilEventStream();
+    }
+
+    @Override
+    public EventStream<E> takeUntil(final EventStream<?> es) {
+        Preconditions.checkNotNull(es, "event stream cannot be null");
+        class TakeUntilEventStream extends EventStreamBase<E> {
+            private static final long serialVersionUID = -2779911717822153295L;
+
+            private final AtomicBoolean finished = new AtomicBoolean();
+
+            @Override
+            public EventStream<E> foreach(final Effect<? super E> e, CancellationToken token) {
+                final CancellationTokenSource innerToken = new CancellationTokenSource();
+
+                class TakeUntilGateEffect implements Effect<Object>, Serializable {
+                    private static final long serialVersionUID = 2102835224218414042L;
+
+                    @Override
+                    public void apply(Object input) {
+                        if (finished.compareAndSet(false, true)) {
+                            innerToken.cancel();
+                        }
+                    }
+                }
+
+                class TakeUntilEffect implements Effect<E>, Serializable {
+                    private static final long serialVersionUID = 3986357517495794590L;
+
+                    @Override
+                    public void apply(E input) {
+                        if (finished.get())
+                            return;
+                        e.apply(input);
+                    }
+                }
+
+                es.foreach(new TakeUntilGateEffect(), innerToken);
+                EventStreamBase.this.foreach(new TakeUntilEffect(), innerToken);
+
+                if (token.canBeCancelled()) {
+                    token.onCancel(new Runnable() {
+                        @Override
+                        public void run() {
+                            innerToken.cancel();
+                        }
+                    });
+                }
+
+                if (token.isCancelled()) {
+                    innerToken.cancel();
+                }
+
+                return this;
+            }
+
+        }
+        return new TakeUntilEventStream();
+    }
+
+    @Override
+    public EventStream<E> synchronize() {
+        class SynchronizedEventStream extends EventStreamBase<E> {
+            private static final long serialVersionUID = -8492933126353306230L;
+
+            private final Object lock = new Object();
+
+            @Override
+            public EventStream<E> foreach(final Effect<? super E> e, CancellationToken token) {
+                class SynchronizedEffect implements Effect<E>, Serializable {
+                    private static final long serialVersionUID = 3131604565473738487L;
+
+                    @Override
+                    public void apply(E input) {
+                        synchronized (lock) {
+                            e.apply(input);
+                        }
+                    }
+                }
+
+                EventStreamBase.this.foreach(new SynchronizedEffect(), token);
+                return this;
+            }
+        }
+        return new SynchronizedEventStream();
+    }
+
+    @Override
+    public EventStream<E> asynchronous(final Executor executor) {
+        Preconditions.checkNotNull(executor, "executor cannot be null");
+        class AsynchronousEventStream extends EventStreamBase<E> {
+            private static final long serialVersionUID = 7220127200602223002L;
+
+            @Override
+            public EventStream<E> foreach(final Effect<? super E> e, CancellationToken token) {
+                class AsynchronousEffect implements Effect<E>, Serializable {
+                    private static final long serialVersionUID = 4797805764789744272L;
+
+                    @Override
+                    public void apply(final E input) {
+                        executor.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                e.apply(input);
+                            }
+                        });
+                    }
+
+                }
+                EventStreamBase.this.foreach(new AsynchronousEffect(), token);
+                return this;
+            }
+
+        }
+        return new AsynchronousEventStream();
+    }
+
+    @Override
+    public EventStream<E> takeWhile(final Predicate<? super E> p) {
+        Preconditions.checkNotNull(p, "predicate cannot be null");
+        class TakeWhileEventStream extends EventStreamBase<E> {
+
+            private static final long serialVersionUID = -6796045368801928080L;
+
+            @Override
+            public EventStream<E> foreach(final Effect<? super E> e, CancellationToken token) {
+                class TakeWhileEffect implements Effect<E>, Serializable {
+                    private static final long serialVersionUID = -7795789919137505152L;
+
+                    @Override
+                    public void apply(E input) {
+                        if (p.apply(input)) {
+                            e.apply(input);
+                        }
+                    }
+                }
+
+                EventStreamBase.this.foreach(new TakeWhileEffect(), token);
+                return null;
+            }
+
+        }
+        return new TakeWhileEventStream();
+    }
+
+    @Override
+    public EventStream<E> pipeTo(EventSink<? super E> sink) {
+        return pipeTo(sink, CancellationToken.NONE);
+    }
+
+    @Override
+    public EventStream<E> pipeTo(final EventSink<? super E> sink, CancellationToken token) {
+        Preconditions.checkNotNull(sink, "sink cannot be null");
+        Preconditions.checkNotNull(token, "token cannot be null");
+        return foreach(new Effect<E>() {
+            @Override
+            public void apply(E input) {
+                sink.fire(input);
+            }
+        }, token);
+    }
+
+    @Override
+    public <U> EventStream<U> foldLeft(final U initial, final Function2<U, E, U> f) {
+        class FoldLeftEventStream extends EventStreamBase<U> {
+            private static final long serialVersionUID = -8392580035947203236L;
+
+            @Override
+            public EventStream<U> foreach(final Effect<? super U> e, CancellationToken token) {
+                final AtomicReference<U> accum = new AtomicReference<U>(initial);
+
+                class FoldLeftEffect implements Effect<E>, Serializable {
+                    private static final long serialVersionUID = -7360438968497763005L;
+
+                    @Override
+                    public void apply(E input) {
+                        while (true) {
+                            U current = accum.get();
+                            U update = f.apply(current, input);
+                            if (accum.compareAndSet(current, update)) {
+                                e.apply(update);
+                                return;
+                            }
+                        }
+                    }
+                }
+                EventStreamBase.this.foreach(new FoldLeftEffect(), token);
+                return this;
+            }
+        }
+        return new FoldLeftEventStream();
+    }
+
+}
