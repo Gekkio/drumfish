@@ -1,5 +1,7 @@
 package fi.gekkio.drumfish.frp;
 
+import javax.annotation.Nullable;
+
 /**
  * Target for events.
  * 
@@ -13,6 +15,6 @@ public interface EventSink<T> {
      * 
      * @param event
      */
-    void fire(T event);
+    void fire(@Nullable T event);
 
 }

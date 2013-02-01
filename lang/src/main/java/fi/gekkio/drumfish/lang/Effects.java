@@ -8,6 +8,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import lombok.RequiredArgsConstructor;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 
 /**
  * Utilities for Effect objects.
@@ -30,6 +31,7 @@ public final class Effects {
      * @return function
      */
     public static <T> Function<T, Void> toFunction(final Effect<T> e) {
+        Preconditions.checkNotNull(e, "effect cannot be null");
         final class EffectFunction implements Function<T, Void>, Serializable {
             private static final long serialVersionUID = -4601876026894597505L;
 
@@ -50,6 +52,7 @@ public final class Effects {
      * @return effect
      */
     public static <T> Effect<T> fromFunction(final Function<? super T, ?> f) {
+        Preconditions.checkNotNull(f, "function cannot be null");
         final class FromFunctionEffect implements Effect<T>, Serializable {
             private static final long serialVersionUID = -8381630600993099590L;
 
@@ -69,6 +72,7 @@ public final class Effects {
      * @return effect
      */
     public static Effect<Object> fromRunnable(final Runnable r) {
+        Preconditions.checkNotNull(r, "runnable cannot be null");
         final class FromRunnableEffect implements Effect<Object>, Serializable {
             private static final long serialVersionUID = 7869061388649838159L;
 
@@ -143,6 +147,7 @@ public final class Effects {
      * @return effect
      */
     public static Effect<? super Object> systemOut(String prefix) {
+        Preconditions.checkNotNull(prefix, "prefix cannot be null");
         return new SystemOutEffect(prefix);
     }
 
@@ -177,6 +182,7 @@ public final class Effects {
      * @return effect
      */
     public static Effect<? super Object> systemErr(String prefix) {
+        Preconditions.checkNotNull(prefix, "prefix cannot be null");
         return new SystemErrEffect(prefix);
     }
 

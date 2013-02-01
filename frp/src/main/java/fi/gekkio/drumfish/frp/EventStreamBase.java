@@ -6,6 +6,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.Nullable;
+
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Objects;
@@ -92,7 +94,7 @@ public abstract class EventStreamBase<E> implements EventStream<E>, Serializable
     }
 
     @Override
-    public <U> EventStream<U> replace(U constant) {
+    public <U> EventStream<U> replace(@Nullable U constant) {
         return map(Functions.constant(constant));
     }
 
@@ -216,12 +218,12 @@ public abstract class EventStreamBase<E> implements EventStream<E>, Serializable
     }
 
     @Override
-    public Signal<E> hold(E initial) {
+    public Signal<E> hold(@Nullable E initial) {
         return hold(initial, CancellationToken.NONE);
     }
 
     @Override
-    public Signal<E> hold(E initial, CancellationToken token) {
+    public Signal<E> hold(@Nullable E initial, CancellationToken token) {
         Preconditions.checkNotNull(token, "token cannot be null");
         final Signal.Var<E> s = new Signal.Var<E>(initial);
         pipeTo(s, token);
@@ -506,7 +508,8 @@ public abstract class EventStreamBase<E> implements EventStream<E>, Serializable
     }
 
     @Override
-    public <U> EventStream<U> foldLeft(final U initial, final Function2<U, E, U> f) {
+    public <U> EventStream<U> foldLeft(@Nullable final U initial, final Function2<U, E, U> f) {
+        Preconditions.checkNotNull(f, "function cannot be null");
         class FoldLeftEventStream extends EventStreamBase<U> {
             private static final long serialVersionUID = -8392580035947203236L;
 

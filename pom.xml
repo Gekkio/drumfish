@@ -225,6 +225,13 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>${maven.javadoc.version}</version>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>aggregate</report>
+						</reports>
+					</reportSet>
+				</reportSets>
 				<configuration>
 					<links>
 						<link>http://docs.guava-libraries.googlecode.com/git-history/release/javadoc</link>

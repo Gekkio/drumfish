@@ -2,6 +2,9 @@ package fi.gekkio.drumfish.frp;
 
 import java.util.concurrent.Executor;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
@@ -17,6 +20,7 @@ import fi.gekkio.drumfish.lang.Function2;
  * @param <T>
  *            event type
  */
+@ParametersAreNonnullByDefault
 public interface EventStream<T> {
 
     /**
@@ -100,7 +104,7 @@ public interface EventStream<T> {
      *            constant value
      * @return event stream
      */
-    <U> EventStream<U> replace(U constant);
+    <U> EventStream<U> replace(@Nullable U constant);
 
     /**
      * Returns a new event stream that publishes values returned by the given supplier instead of the original event
@@ -264,7 +268,7 @@ public interface EventStream<T> {
      *            initial value
      * @return signal
      */
-    Signal<T> hold(T initial);
+    Signal<T> hold(@Nullable T initial);
 
     /**
      * Returns a signal that will contain the given initial value and track the value based on arriving events.
@@ -278,8 +282,8 @@ public interface EventStream<T> {
      *            non-null cancellation token
      * @return signal
      */
-    Signal<T> hold(T initial, CancellationToken token);
+    Signal<T> hold(@Nullable T initial, CancellationToken token);
 
-    <U> EventStream<U> foldLeft(U initial, Function2<U, T, U> f);
+    <U> EventStream<U> foldLeft(@Nullable U initial, Function2<U, T, U> f);
 
 }

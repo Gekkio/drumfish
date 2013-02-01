@@ -3,10 +3,13 @@ package fi.gekkio.drumfish.frp;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 /**
  * Represents a token that tracks cancellation state and collects callback functions that should be executed when the
  * token is cancelled.
  */
+@ParametersAreNonnullByDefault
 public interface CancellationToken {
 
     /**

@@ -60,17 +60,4 @@ public class CancellationTokenSource implements CancellationToken, Serializable 
         return true;
     }
 
-    public static void main(String[] args) {
-        CancellationTokenSource wtf = new CancellationTokenSource();
-        for (int i = 0; i < 5; i++) {
-            wtf.onCancel(new Runnable() {
-                @Override
-                public void run() {
-                    throw new RuntimeException(":(");
-                }
-            });
-        }
-        wtf.cancel();
-    }
-
 }

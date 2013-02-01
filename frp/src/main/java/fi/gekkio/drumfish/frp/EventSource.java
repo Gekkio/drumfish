@@ -1,6 +1,7 @@
 package fi.gekkio.drumfish.frp;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import fi.gekkio.drumfish.lang.Effect;
@@ -21,6 +22,8 @@ public class EventSource<E> extends EventStreamBase<E> implements EventSink<E> {
 
     @Override
     public EventStream<E> foreach(final Effect<? super E> e, CancellationToken token) {
+        Preconditions.checkNotNull(e, "effect cannot be null");
+        Preconditions.checkNotNull(token, "token cannot be null");
         addListener(e);
 
         if (token.canBeCancelled()) {

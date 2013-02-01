@@ -3,6 +3,8 @@ package fi.gekkio.drumfish.frp;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.Nullable;
+
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -68,12 +70,13 @@ public abstract class SignalBase<T> implements Signal<T>, Serializable, Supplier
     }
 
     @Override
-    public <U> Signal<U> replace(U constant) {
+    public <U> Signal<U> replace(@Nullable U constant) {
         return map(Functions.constant(constant));
     }
 
     @Override
     public <U> Signal<U> map(Signal<U> s) {
+        Preconditions.checkNotNull(s, "signal cannot be null");
         return map(s.asSupplier());
     }
 
@@ -183,6 +186,8 @@ public abstract class SignalBase<T> implements Signal<T>, Serializable, Supplier
 
     @Override
     public <A> Signal<Tuple2<T, A>> zip(Signal<A> a, CancellationToken token) {
+        Preconditions.checkNotNull(a, "signal cannot be null");
+        Preconditions.checkNotNull(token, "token cannot be null");
         final Signal.Var<Tuple2<T, A>> zippedSignal = new Signal.Var<Tuple2<T, A>>(Tuple2.of(this.now(), a.now()));
         this.change().foreach(new Effect<T>() {
             @Override
@@ -206,6 +211,9 @@ public abstract class SignalBase<T> implements Signal<T>, Serializable, Supplier
 
     @Override
     public <A, B> Signal<Tuple3<T, A, B>> zip(Signal<A> a, Signal<B> b, CancellationToken token) {
+        Preconditions.checkNotNull(a, "first signal cannot be null");
+        Preconditions.checkNotNull(b, "second signal cannot be null");
+        Preconditions.checkNotNull(token, "token cannot be null");
         final Signal.Var<Tuple3<T, A, B>> zippedSignal = new Signal.Var<Tuple3<T, A, B>>(Tuple3.of(this.now(), a.now(), b.now()));
         this.change().foreach(new Effect<T>() {
             @Override
@@ -256,12 +264,14 @@ public abstract class SignalBase<T> implements Signal<T>, Serializable, Supplier
     }
 
     @Override
-    public <U> Signal<U> foldLeft(U initial, Function2<U, T, U> f) {
+    public <U> Signal<U> foldLeft(@Nullable U initial, Function2<U, T, U> f) {
         return foldLeft(initial, f, CancellationToken.NONE);
     }
 
     @Override
-    public <U> Signal<U> foldLeft(U initial, final Function2<U, T, U> f, CancellationToken token) {
+    public <U> Signal<U> foldLeft(@Nullable U initial, final Function2<U, T, U> f, CancellationToken token) {
+        Preconditions.checkNotNull(f, "function cannot be null");
+        Preconditions.checkNotNull(token, "token cannot be null");
         final Signal.Var<U> foldLeftSignal = new Signal.Var<U>(f.apply(initial, now()));
 
         this.change().foreach(new Effect<T>() {

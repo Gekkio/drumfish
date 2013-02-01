@@ -3,6 +3,9 @@ package fi.gekkio.drumfish.frp;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -13,6 +16,7 @@ import fi.gekkio.drumfish.lang.Effect;
 /**
  * Utilities for EventStream objects.
  */
+@ParametersAreNonnullByDefault
 public final class EventStreams {
 
     private EventStreams() {
@@ -162,7 +166,7 @@ public final class EventStreams {
      *            event value
      * @return event stream
      */
-    public static <T> EventStream<T> instant(final T value) {
+    public static <T> EventStream<T> instant(@Nullable final T value) {
         class InstantEventStream extends EventStreamBase<T> {
             private static final long serialVersionUID = 6465414757355523929L;
 

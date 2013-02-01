@@ -2,6 +2,10 @@ package fi.gekkio.drumfish.frp;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import lombok.RequiredArgsConstructor;
 
 import com.google.common.base.Function;
@@ -20,6 +24,7 @@ import fi.gekkio.drumfish.lang.Tuple3;
  * @param <T>
  *            value type
  */
+@ParametersAreNonnullByDefault
 public interface Signal<T> {
 
     /**
@@ -42,6 +47,7 @@ public interface Signal<T> {
      * 
      * @return value
      */
+    @CheckForNull
     T now();
 
     /**
@@ -51,9 +57,9 @@ public interface Signal<T> {
      */
     Signal<T> distinct();
 
-    <U> Signal<U> foldLeft(U initial, Function2<U, T, U> f);
+    <U> Signal<U> foldLeft(@Nullable U initial, Function2<U, T, U> f);
 
-    <U> Signal<U> foldLeft(U initial, Function2<U, T, U> f, CancellationToken token);
+    <U> Signal<U> foldLeft(@Nullable U initial, Function2<U, T, U> f, CancellationToken token);
 
     /**
      * Returns an event stream that will track the changes of this signal.
@@ -78,7 +84,7 @@ public interface Signal<T> {
      *            constant value
      * @return signal
      */
-    <U> Signal<U> replace(U constant);
+    <U> Signal<U> replace(@Nullable U constant);
 
     /**
      * Returns a new signal that replaces all values with values returned by the given signal.
