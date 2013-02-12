@@ -2,15 +2,17 @@ package fi.gekkio.drumfish
 
 import java.io.NotSerializableException
 import java.io.ObjectOutputStream
-import scala.annotation.implicitNotFound
+import java.io.OutputStream
+import java.io.PrintStream
+
 import org.specs2.matcher.Expectable
 import org.specs2.matcher.MatchResult
 import org.specs2.matcher.Matcher
+
 import com.google.common.base.{ Function => GuavaFunction }
 import com.google.common.io.NullOutputStream
+
 import fi.gekkio.drumfish.lang.Effect
-import java.io.PrintStream
-import java.io.OutputStream
 
 package object lang {
 
@@ -26,7 +28,9 @@ package object lang {
     def run() = f()
   }
 
-  def withSystemOut(stream: OutputStream)(f: => Unit): Unit = {
+  private[this] val streamLock = new Object
+
+  def withSystemOut(stream: OutputStream)(f: => Unit): Unit = streamLock.synchronized {
     val original = System.out
     val printStream = new PrintStream(stream)
     try {
@@ -38,7 +42,7 @@ package object lang {
     }
   }
 
-  def withSystemErr(stream: OutputStream)(f: => Unit): Unit = {
+  def withSystemErr(stream: OutputStream)(f: => Unit): Unit = streamLock.synchronized {
     val original = System.err
     val printStream = new PrintStream(stream)
     try {
