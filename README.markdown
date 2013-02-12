@@ -1,6 +1,8 @@
 Drumfish: Java 6 utility library inspired by functional programming languages
 =============================================================================
 
+[![Build Status](https://travis-ci.org/Gekkio/drumfish.png)](https://travis-ci.org/Gekkio/drumfish)
+
 ## Introduction
 Drumfish is a collection of useful Java 6+ libraries inspired by ideas used in functional programming languages. It doesn't contain any earth-shattering new ideas or utility code, but provider some commonly used functional programming concepts to Java programmers. Using this library correctly can lead to significantly more robust and type-safe Java code, which is a breeze of new air in a world dominated by annotations, reflection, and XML. Drumfish requires [Google Guava](http://code.google.com/p/guava-libraries), and can be in a way seen as an extension to it.
 
