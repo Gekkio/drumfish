@@ -20,6 +20,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+		<caliper.version>0.5-rc1</caliper.version>
 		<guava.version>13.0.1</guava.version>
 		<jsr305.version>2.0.1</jsr305.version>
 		<junit.version>4.11</junit.version>
@@ -74,6 +75,7 @@
 	</developers>
 
 	<modules>
+		<module>data</module>
 		<module>frp</module>
 		<module>lang</module>
 		<module>validation</module>
@@ -193,6 +195,11 @@
 				<version>${project.version}</version>
 			</dependency>
 			<!-- *** External dependencies *** -->
+			<dependency>
+				<groupId>com.google.caliper</groupId>
+				<artifactId>caliper</artifactId>
+				<version>${caliper.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>com.google.code.findbugs</groupId>
 				<artifactId>jsr305</artifactId>
