@@ -14,7 +14,7 @@ Drumfish is licensed under the Apache License, Version 2.0.
 The primary design goals of Drumfish are compile-time safety (which includes, but is not limited to type safety) and immutability. Maximizing compile-time safety in a software project makes large-scale refactoring possible, and can provide certain safety that tests cannot provide. Favoring immutability leads to thread-safe code, and usually leads to API design where tracking side effects and mutations is extremely simple.
 
 ## What is included?
-Drumfish consists of three modules: *lang*, *frp*, and *validation*.
+Drumfish consists of four modules: *data*, *lang*, *frp*, and *validation*.
 
 Drumfish releases are available in Maven central under the groupId `fi.gekkio.drumfish`. Use Maven, or any Maven-compatible build tool to fetch the artifacts and include them inyour project.
 
@@ -27,6 +27,16 @@ Lang consists mainly of certain function interfaces, Option and Either types, an
       <version>0.1.0</version>
     </dependency>
 
+#### Status: Stable
+Nearly all features of this module have been used in production apps for several years.
+
+### Drumfish Data
+Data consists of immutable persistent data structures. Currently it contains a generic finger tree implementation, and a sequence implementation based on it.
+
+#### Status: Proof of concept
+Everything is still work in progress. Some design choices in the finger tree implementation are based on experiences with an older Java implementation, which has been in production use for years.
+Needs more practical implementations (priority queue, interval tree, etc.), or at least some example documentation.
+
 ### Drumfish FRP
 FRP consists of a rich, composable API for Functional Reactive Programming.
 
@@ -36,6 +46,14 @@ FRP consists of a rich, composable API for Functional Reactive Programming.
       <version>0.1.0</version>
     </dependency>
 
+#### Status: Experimental
+This module is in production use, but the API is still in flux. Some currently open questions are:
+
++ Naming and behaviour of flatMap. The name is not directly intuitive, but is consistent with monadic patterns in Scala. The actual behaviour currently does switching, but with event streams another option is to instead collect all events from all past streams.
++ Drumfish FRP does not use a three-stream model (= events, errors, end-of-stream). Thus, it is simpler but less powerful than alternatives. On the other hand, it's possible to build a three-stream API on top of the current one.
++ Potential performance improvements. Right now all the API methods create new objects even though it could be avoided in some cases (e.g. calling distinct() twice)
++ Thread-safety. Great care has been taken to ensure thread-safety of the implementation, but a careful analysis
+
 ### Drumfish Validation
 Validation provides a type-safe, composable validation API, which is inspired by the Validation type in [Scalaz](https://github.com/scalaz/scalaz), but removes a lot of abstraction in order to keep the API more usable in Java. The resulting API has a reasonable balance between abstraction and ease of use.
 
@@ -44,6 +62,9 @@ Validation provides a type-safe, composable validation API, which is inspired by
       <artifactId>drumfish-validation</artifactId>
       <version>0.1.0</version>
     </dependency>
+
+#### Status: Experimental
+This module is in production use, but the API is still in flux, and still lacks many useful features. The use of an immutable, two-state Validation types is on the other hand a proven concept used in functional programming languages.
 
 ## Modifying Drumfish
 Compiling on the command line is simple, because it's enough to have Maven 3.0.x and Java 1.6+ installed. If you intend to use an IDE, Scala and Project Lombok support are required. If you are a JRebel user, there's a Maven profile called `jrebel` which activates automatic rebel.xml generation.
