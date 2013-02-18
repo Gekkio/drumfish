@@ -62,6 +62,8 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
     public abstract Split<V, T> split(Predicate<V> p, V accum);
 
+    public abstract int getSize();
+
     protected abstract FingerTreeFactory<V, T> getFactory();
 
     public Tuple2<FingerTree<V, T>, FingerTree<V, T>> split(Predicate<V> p) {
@@ -370,6 +372,11 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
             return tree.prepend(d).prepend(c).prepend(b).prepend(a);
         }
 
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
     }
 
     @RequiredArgsConstructor
@@ -495,6 +502,11 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         @Override
         public FingerTree<V, T> concat(T a, T b, T c, T d, FingerTree<V, T> tree) {
             return tree.prepend(d).prepend(c).prepend(b).prepend(a).prepend(this.a);
+        }
+
+        @Override
+        public int getSize() {
+            return 1;
         }
 
     }
@@ -1125,6 +1137,11 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
             return Iterables.elementsEqual(this, other);
         }
 
+        @Override
+        public int getSize() {
+            return left.getSize() + middle.getSize() + right.getSize();
+        }
+
     }
 
     @RequiredArgsConstructor
@@ -1252,6 +1269,11 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         @Override
         public FingerTree<V, T> concat(T a, T b, T c, T d, FingerTree<V, T> tree) {
             return unwrap().concat(a, b, c, d, tree);
+        }
+
+        @Override
+        public int getSize() {
+            return unwrap().getSize();
         }
 
     }

@@ -33,6 +33,8 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
 
     public abstract void print(StringBuilder sb, String padding, Printer<? super T> printer);
 
+    public abstract int getSize();
+
     @RequiredArgsConstructor
     @EqualsAndHashCode(callSuper = false, exclude = "measure")
     @ToString(callSuper = false)
@@ -84,6 +86,11 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
             sb.append(padding);
             sb.append("\\+");
             printer.print(sb, padding + "  ", b);
+        }
+
+        @Override
+        public int getSize() {
+            return 2;
         }
     }
 
@@ -147,6 +154,11 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
             sb.append(padding);
             sb.append("\\+");
             printer.print(sb, padding + "  ", c);
+        }
+
+        @Override
+        public int getSize() {
+            return 3;
         }
 
     }

@@ -49,6 +49,8 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
 
     public abstract void print(StringBuilder sb, String padding, Printer<? super T> printer);
 
+    public abstract int getSize();
+
     @Value
     static class DigitSplit<T> implements Serializable {
         private static final long serialVersionUID = -5364760129719273207L;
@@ -158,6 +160,11 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
             printer.print(sb, padding + "  ", a);
         }
 
+        @Override
+        public int getSize() {
+            return 1;
+        }
+
     }
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -250,6 +257,11 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
             sb.append(padding);
             sb.append("\\-");
             printer.print(sb, padding + "  ", b);
+        }
+
+        @Override
+        public int getSize() {
+            return 2;
         }
 
     }
@@ -353,6 +365,11 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
             sb.append(padding);
             sb.append("\\-");
             printer.print(sb, padding + "  ", c);
+        }
+
+        @Override
+        public int getSize() {
+            return 3;
         }
 
     }
@@ -465,6 +482,11 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
             sb.append(padding);
             sb.append("\\-");
             printer.print(sb, padding + "  ", d);
+        }
+
+        @Override
+        public int getSize() {
+            return 4;
         }
 
     }
