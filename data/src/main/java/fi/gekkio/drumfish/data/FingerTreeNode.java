@@ -5,6 +5,8 @@ import static fi.gekkio.drumfish.data.FingerTreeDigit.digit;
 import java.io.Serializable;
 import java.util.Iterator;
 
+import javax.annotation.Nullable;
+
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -16,6 +18,8 @@ import com.google.common.collect.UnmodifiableIterator;
 
 import fi.gekkio.drumfish.data.FingerTree.Printer;
 import fi.gekkio.drumfish.data.FingerTreeDigit.DigitSplit;
+import fi.gekkio.drumfish.lang.Function2;
+import fi.gekkio.drumfish.lang.LeftFold;
 
 abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
     private static final long serialVersionUID = -9130857121651032905L;
@@ -38,6 +42,8 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
     public abstract Iterator<T> reverseIterator();
 
     public abstract FingerTreeNode<V, T> reverseAndMap(FingerTreeFactory<V, T> factory, Function<T, T> f);
+
+    public abstract <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f);
 
     @RequiredArgsConstructor
     @EqualsAndHashCode(callSuper = false, exclude = "measure")
@@ -107,6 +113,15 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
         public FingerTreeNode<V, T> reverseAndMap(FingerTreeFactory<V, T> factory, Function<T, T> f) {
             return factory.node(f.apply(b), f.apply(a));
         }
+
+        @Override
+        public <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f) {
+            U accum = initial;
+            accum = f.apply(accum, a);
+            accum = f.apply(accum, b);
+            return accum;
+        }
+
     }
 
     @RequiredArgsConstructor
@@ -186,6 +201,16 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
         public FingerTreeNode<V, T> reverseAndMap(FingerTreeFactory<V, T> factory, Function<T, T> f) {
             return factory.node(f.apply(c), f.apply(b), f.apply(a));
         }
+
+        @Override
+        public <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f) {
+            U accum = initial;
+            accum = f.apply(accum, a);
+            accum = f.apply(accum, b);
+            accum = f.apply(accum, c);
+            return accum;
+        }
+
     }
 
     @RequiredArgsConstructor
@@ -232,6 +257,17 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
                 elements = nodes.next().iterator();
             return elements.next();
         }
+    }
+
+    @RequiredArgsConstructor
+    static final class NodeLeftFold<V, T, U> implements LeftFold<FingerTreeNode<V, T>, U> {
+        private final Function2<U, T, U> f;
+
+        @Override
+        public U apply(U first, FingerTreeNode<V, T> second) {
+            return second.foldLeft(first, f);
+        }
+
     }
 
     @RequiredArgsConstructor

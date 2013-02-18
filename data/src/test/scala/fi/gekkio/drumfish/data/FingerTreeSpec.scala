@@ -85,6 +85,7 @@ class FingerTreeSpec extends Specification with ScalaCheck {
         first must be_==(second)
       } ^
       "reverse must work correctly" ! check { tree: FingerTree[Int, Int] => tree.reverse().asScala must containAllOf(tree.asScala.toList.reverse).inOrder } ^
-      "a double reverse must be equal to original" ! check { tree: FingerTree[Int, Int] => tree.reverse().reverse() must be_==(tree) }
+      "a double reverse must be equal to original" ! check { tree: FingerTree[Int, Int] => tree.reverse().reverse() must be_==(tree) } ^
+      "fold left must work correctly" ! check { tree: FingerTree[Int, Int] => tree.foldLeft(0, (a: Int, b: Int) => a + b) must be_==(tree.asScala.foldLeft(0) { _ + _ }) }
 
 }

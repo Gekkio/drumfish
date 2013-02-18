@@ -6,6 +6,7 @@ import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.util.Iterator;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 
 import lombok.EqualsAndHashCode;
@@ -27,10 +28,12 @@ import fi.gekkio.drumfish.data.FingerTreeDigit.Digit2;
 import fi.gekkio.drumfish.data.FingerTreeDigit.Digit3;
 import fi.gekkio.drumfish.data.FingerTreeDigit.Digit4;
 import fi.gekkio.drumfish.data.FingerTreeNode.NodeIterator;
+import fi.gekkio.drumfish.data.FingerTreeNode.NodeLeftFold;
 import fi.gekkio.drumfish.data.FingerTreeNode.NodeMapper;
 import fi.gekkio.drumfish.data.FingerTreeNode.NodePrinter;
 import fi.gekkio.drumfish.data.FingerTreeNode.NodeReverseIterator;
 import fi.gekkio.drumfish.data.FingerTreeNode.NodeReverser;
+import fi.gekkio.drumfish.lang.Function2;
 import fi.gekkio.drumfish.lang.LazyIterator;
 import fi.gekkio.drumfish.lang.Option;
 import fi.gekkio.drumfish.lang.Tuple2;
@@ -74,6 +77,9 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
     public abstract FingerTreeFactory<V, T> getFactory();
 
     public abstract FingerTree<V, T> reverse();
+
+    @CheckForNull
+    public abstract <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f);
 
     protected abstract FingerTree<V, T> reverseAndMap(Function<T, T> f);
 
@@ -420,6 +426,11 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         protected FingerTree<V, T> reverseAndMap(Function<T, T> f) {
             return this;
         }
+
+        @Override
+        public <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f) {
+            return initial;
+        }
     }
 
     @RequiredArgsConstructor
@@ -567,6 +578,12 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         @Override
         protected FingerTree<V, T> reverseAndMap(Function<T, T> f) {
             return factory.tree(f.apply(a));
+        }
+
+        @Override
+        @CheckForNull
+        public <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f) {
+            return f.apply(initial, a);
         }
 
     }
@@ -1224,6 +1241,16 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
             return factory.deep(right.reverseAndMap(f), middle.reverseAndMap(new NodeReverser<V, T>(factory, f)), left.reverseAndMap(f));
         }
 
+        @Override
+        @CheckForNull
+        public <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f) {
+            U accum = initial;
+            accum = left.foldLeft(accum, f);
+            accum = middle.foldLeft(accum, new NodeLeftFold<V, T, U>(f));
+            accum = right.foldLeft(accum, f);
+            return accum;
+        }
+
     }
 
     @RequiredArgsConstructor
@@ -1387,6 +1414,12 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         @Override
         protected FingerTree<V, T> reverseAndMap(Function<T, T> f) {
             return unwrap().reverseAndMap(f);
+        }
+
+        @Override
+        @CheckForNull
+        public <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f) {
+            return unwrap().foldLeft(initial, f);
         }
 
     }

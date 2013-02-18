@@ -16,6 +16,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterators;
 
 import fi.gekkio.drumfish.data.FingerTree.Printer;
+import fi.gekkio.drumfish.lang.Function2;
 
 abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
     private static final long serialVersionUID = 751532813120711150L;
@@ -54,6 +55,8 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
     public abstract Iterator<T> reverseIterator();
 
     public abstract FingerTreeDigit<T> reverseAndMap(Function<T, T> f);
+
+    public abstract <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f);
 
     @Value
     static class DigitSplit<T> implements Serializable {
@@ -179,6 +182,13 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
             return digit(f.apply(a));
         }
 
+        @Override
+        public <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f) {
+            U accum = initial;
+            accum = f.apply(accum, a);
+            return accum;
+        }
+
     }
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -288,6 +298,15 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         public FingerTreeDigit<T> reverseAndMap(Function<T, T> f) {
             return digit(f.apply(b), f.apply(a));
         }
+
+        @Override
+        public <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f) {
+            U accum = initial;
+            accum = f.apply(accum, a);
+            accum = f.apply(accum, b);
+            return accum;
+        }
+
     }
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -407,6 +426,14 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
             return digit(f.apply(c), f.apply(b), f.apply(a));
         }
 
+        @Override
+        public <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f) {
+            U accum = initial;
+            accum = f.apply(accum, a);
+            accum = f.apply(accum, b);
+            accum = f.apply(accum, c);
+            return accum;
+        }
     }
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -535,6 +562,15 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
             return digit(f.apply(d), f.apply(c), f.apply(b), f.apply(a));
         }
 
+        @Override
+        public <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f) {
+            U accum = initial;
+            accum = f.apply(accum, a);
+            accum = f.apply(accum, b);
+            accum = f.apply(accum, c);
+            accum = f.apply(accum, d);
+            return accum;
+        }
     }
 
 }

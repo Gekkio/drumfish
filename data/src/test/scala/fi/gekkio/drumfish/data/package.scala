@@ -11,7 +11,11 @@ import lang.Monoid
 package object data {
 
   implicit def guavaFunction[A, B](f: A => B) = new com.google.common.base.Function[A, B] {
-    def apply(input: A) = f.apply(input)
+    def apply(a: A) = f.apply(a)
+  }
+
+  implicit def drumfishFunction2[A, B, C](f: (A, B) => C) = new fi.gekkio.drumfish.lang.Function2[A, B, C] {
+    def apply(a: A, b: B) = f.apply(a, b)
   }
 
   private[this] val monoid = new Monoid[Int] {
