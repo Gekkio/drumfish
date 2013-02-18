@@ -19,35 +19,35 @@ import fi.gekkio.drumfish.data.FingerTree.Printer;
 import fi.gekkio.drumfish.lang.Function2;
 import fi.gekkio.drumfish.lang.Option;
 
-abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
+abstract class FingerTreeDigit<V, T> implements Iterable<T>, Serializable {
     private static final long serialVersionUID = 751532813120711150L;
 
     private FingerTreeDigit() {
     }
 
-    public abstract FingerTreeDigit<T> prepend(T value);
+    public abstract FingerTreeDigit<V, T> prepend(FingerTreeFactory<V, T> factory, T value);
 
-    public abstract FingerTreeDigit<T> append(T value);
+    public abstract FingerTreeDigit<V, T> append(FingerTreeFactory<V, T> factory, T value);
 
-    public abstract <V> V measure(FingerTreeFactory<V, T> factory);
+    public abstract V measure();
 
-    public abstract <O> FingerTreeDigit<O> map(Function<? super T, O> f);
+    public abstract <U, O> FingerTreeDigit<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f);
 
     public abstract T getHead();
 
-    public abstract FingerTreeDigit<T> getTail();
+    public abstract FingerTreeDigit<V, T> getTail(FingerTreeFactory<V, T> factory);
 
-    public abstract FingerTreeDigit<T> getInit();
+    public abstract FingerTreeDigit<V, T> getInit(FingerTreeFactory<V, T> factory);
 
     public abstract T getLast();
 
-    public abstract <V> DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum);
+    public abstract DigitSplit<V, T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum);
 
-    public abstract <V> FingerTreeNode<V, T> toTailNode(FingerTreeFactory<V, T> factory);
+    public abstract FingerTreeNode<V, T> toTailNode(FingerTreeFactory<V, T> factory);
 
-    public abstract <V> FingerTreeNode<V, T> toInitNode(FingerTreeFactory<V, T> factory);
+    public abstract FingerTreeNode<V, T> toInitNode(FingerTreeFactory<V, T> factory);
 
-    public abstract <V> FingerTree<V, T> toTree(FingerTreeFactory<V, T> factory);
+    public abstract FingerTree<V, T> toTree(FingerTreeFactory<V, T> factory);
 
     public abstract void print(StringBuilder sb, String padding, Printer<? super T> printer);
 
@@ -55,65 +55,50 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
 
     public abstract Iterator<T> reverseIterator();
 
-    public abstract FingerTreeDigit<T> reverseAndMap(Function<T, T> f);
+    public abstract FingerTreeDigit<V, T> reverseAndMap(FingerTreeFactory<V, T> factory, Function<T, T> f);
 
     public abstract <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f);
 
-    public abstract <V> Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p);
+    public abstract Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p);
 
     @Value
-    static class DigitSplit<T> implements Serializable {
+    static class DigitSplit<V, T> implements Serializable {
         private static final long serialVersionUID = -5364760129719273207L;
 
         @Nullable
-        public final FingerTreeDigit<T> left;
+        public final FingerTreeDigit<V, T> left;
         public final T pivot;
         @Nullable
-        public final FingerTreeDigit<T> right;
+        public final FingerTreeDigit<V, T> right;
     }
 
-    public static <T> FingerTreeDigit<T> digit(T a) {
-        return new Digit1<T>(a);
-    }
-
-    public static <T> FingerTreeDigit<T> digit(T a, T b) {
-        return new Digit2<T>(a, b);
-    }
-
-    public static <T> FingerTreeDigit<T> digit(T a, T b, T c) {
-        return new Digit3<T>(a, b, c);
-    }
-
-    public static <T> FingerTreeDigit<T> digit(T a, T b, T c, T d) {
-        return new Digit4<T>(a, b, c, d);
-    }
-
-    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+    @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
     @EqualsAndHashCode(callSuper = false)
     @ToString(callSuper = false)
-    static final class Digit1<T> extends FingerTreeDigit<T> {
+    static final class Digit1<V, T> extends FingerTreeDigit<V, T> {
         private static final long serialVersionUID = -667222115592102172L;
 
+        final V measure;
         final T a;
 
         @Override
-        public FingerTreeDigit<T> prepend(T value) {
-            return digit(value, a);
+        public FingerTreeDigit<V, T> prepend(FingerTreeFactory<V, T> factory, T value) {
+            return factory.digit(value, a);
         }
 
         @Override
-        public FingerTreeDigit<T> append(T value) {
-            return digit(a, value);
+        public FingerTreeDigit<V, T> append(FingerTreeFactory<V, T> factory, T value) {
+            return factory.digit(a, value);
         }
 
         @Override
-        public <O> FingerTreeDigit<O> map(Function<? super T, O> f) {
-            return digit(f.apply(a));
+        public <U, O> FingerTreeDigit<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f) {
+            return factory.digit(f.apply(a));
         }
 
         @Override
-        public <V> V measure(FingerTreeFactory<V, T> factory) {
-            return factory.measure(a);
+        public V measure() {
+            return measure;
         }
 
         @Override
@@ -132,22 +117,22 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public FingerTreeDigit<T> getTail() {
+        public FingerTreeDigit<V, T> getTail(FingerTreeFactory<V, T> factory) {
             throw new UnsupportedOperationException("Cannot get tail from Digit1");
         }
 
         @Override
-        public <V> FingerTreeNode<V, T> toTailNode(FingerTreeFactory<V, T> factory) {
+        public FingerTreeNode<V, T> toTailNode(FingerTreeFactory<V, T> factory) {
             throw new UnsupportedOperationException("Cannot get tail node from Digit1");
         }
 
         @Override
-        public FingerTreeDigit<T> getInit() {
+        public FingerTreeDigit<V, T> getInit(FingerTreeFactory<V, T> factory) {
             throw new UnsupportedOperationException("Cannot get init from Digit1");
         }
 
         @Override
-        public <V> FingerTreeNode<V, T> toInitNode(FingerTreeFactory<V, T> factory) {
+        public FingerTreeNode<V, T> toInitNode(FingerTreeFactory<V, T> factory) {
             throw new UnsupportedOperationException("Cannot get init node from Digit1");
         }
 
@@ -157,12 +142,12 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <V> DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
-            return new DigitSplit<T>(null, a, null);
+        public DigitSplit<V, T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
+            return new DigitSplit<V, T>(null, a, null);
         }
 
         @Override
-        public <V> FingerTree<V, T> toTree(FingerTreeFactory<V, T> factory) {
+        public FingerTree<V, T> toTree(FingerTreeFactory<V, T> factory) {
             return factory.tree(a);
         }
 
@@ -181,8 +166,8 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public FingerTreeDigit<T> reverseAndMap(Function<T, T> f) {
-            return digit(f.apply(a));
+        public FingerTreeDigit<V, T> reverseAndMap(FingerTreeFactory<V, T> factory, Function<T, T> f) {
+            return factory.digit(f.apply(a));
         }
 
         @Override
@@ -193,7 +178,7 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <V> Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p) {
+        public Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p) {
             if (p.apply(factory.measure(a)))
                 return Option.some(a);
             return Option.none();
@@ -201,33 +186,34 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
 
     }
 
-    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+    @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
     @EqualsAndHashCode(callSuper = false)
     @ToString(callSuper = false)
-    static final class Digit2<T> extends FingerTreeDigit<T> {
+    static final class Digit2<V, T> extends FingerTreeDigit<V, T> {
         private static final long serialVersionUID = 3093918006332086954L;
 
+        final V measure;
         final T a;
         final T b;
 
         @Override
-        public FingerTreeDigit<T> prepend(T value) {
-            return digit(value, a, b);
+        public FingerTreeDigit<V, T> prepend(FingerTreeFactory<V, T> factory, T value) {
+            return factory.digit(value, a, b);
         }
 
         @Override
-        public FingerTreeDigit<T> append(T value) {
-            return digit(a, b, value);
+        public FingerTreeDigit<V, T> append(FingerTreeFactory<V, T> factory, T value) {
+            return factory.digit(a, b, value);
         }
 
         @Override
-        public <O> FingerTreeDigit<O> map(Function<? super T, O> f) {
-            return digit(f.apply(a), f.apply(b));
+        public <U, O> FingerTreeDigit<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f) {
+            return factory.digit(f.apply(a), f.apply(b));
         }
 
         @Override
-        public <V> V measure(FingerTreeFactory<V, T> factory) {
-            return factory.measure(a, b);
+        public V measure() {
+            return measure;
         }
 
         @SuppressWarnings("unchecked")
@@ -248,22 +234,22 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public FingerTreeDigit<T> getTail() {
-            return digit(b);
+        public FingerTreeDigit<V, T> getTail(FingerTreeFactory<V, T> factory) {
+            return factory.digit(b);
         }
 
         @Override
-        public <V> FingerTreeNode<V, T> toTailNode(FingerTreeFactory<V, T> factory) {
+        public FingerTreeNode<V, T> toTailNode(FingerTreeFactory<V, T> factory) {
             throw new UnsupportedOperationException("Cannot get tail node from Digit2");
         }
 
         @Override
-        public FingerTreeDigit<T> getInit() {
-            return digit(a);
+        public FingerTreeDigit<V, T> getInit(FingerTreeFactory<V, T> factory) {
+            return factory.digit(a);
         }
 
         @Override
-        public <V> FingerTreeNode<V, T> toInitNode(FingerTreeFactory<V, T> factory) {
+        public FingerTreeNode<V, T> toInitNode(FingerTreeFactory<V, T> factory) {
             throw new UnsupportedOperationException("Cannot get init node from Digit2");
         }
 
@@ -273,16 +259,16 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <V> DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
+        public DigitSplit<V, T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
             V accumA = factory.mappend(accum, factory.measure(a));
             if (p.apply(accumA))
-                return new DigitSplit<T>(null, a, digit(b));
-            return new DigitSplit<T>(digit(a), b, null);
+                return new DigitSplit<V, T>(null, a, factory.digit(b));
+            return new DigitSplit<V, T>(factory.digit(a), b, null);
         }
 
         @Override
-        public <V> FingerTree<V, T> toTree(FingerTreeFactory<V, T> factory) {
-            return factory.deep(digit(a), factory.nodeFactory().emptyTree, digit(b));
+        public FingerTree<V, T> toTree(FingerTreeFactory<V, T> factory) {
+            return factory.deep(factory.digit(a), factory.nodeFactory().emptyTree, factory.digit(b));
         }
 
         @Override
@@ -305,8 +291,8 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public FingerTreeDigit<T> reverseAndMap(Function<T, T> f) {
-            return digit(f.apply(b), f.apply(a));
+        public FingerTreeDigit<V, T> reverseAndMap(FingerTreeFactory<V, T> factory, Function<T, T> f) {
+            return factory.digit(f.apply(b), f.apply(a));
         }
 
         @Override
@@ -318,7 +304,7 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <V> Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p) {
+        public Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p) {
             if (p.apply(factory.measure(a)))
                 return Option.some(a);
             if (p.apply(factory.measure(b)))
@@ -328,34 +314,35 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
 
     }
 
-    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+    @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
     @EqualsAndHashCode(callSuper = false)
     @ToString(callSuper = false)
-    static final class Digit3<T> extends FingerTreeDigit<T> {
+    static final class Digit3<V, T> extends FingerTreeDigit<V, T> {
         private static final long serialVersionUID = -782252146232630363L;
 
+        final V measure;
         final T a;
         final T b;
         final T c;
 
         @Override
-        public FingerTreeDigit<T> prepend(T value) {
-            return digit(value, a, b, c);
+        public FingerTreeDigit<V, T> prepend(FingerTreeFactory<V, T> factory, T value) {
+            return factory.digit(value, a, b, c);
         }
 
         @Override
-        public FingerTreeDigit<T> append(T value) {
-            return digit(a, b, c, value);
+        public FingerTreeDigit<V, T> append(FingerTreeFactory<V, T> factory, T value) {
+            return factory.digit(a, b, c, value);
         }
 
         @Override
-        public <O> FingerTreeDigit<O> map(Function<? super T, O> f) {
-            return digit(f.apply(a), f.apply(b), f.apply(c));
+        public <U, O> FingerTreeDigit<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f) {
+            return factory.digit(f.apply(a), f.apply(b), f.apply(c));
         }
 
         @Override
-        public <V> V measure(FingerTreeFactory<V, T> factory) {
-            return factory.measure(a, b, c);
+        public V measure() {
+            return measure;
         }
 
         @SuppressWarnings("unchecked")
@@ -376,22 +363,22 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public FingerTreeDigit<T> getTail() {
-            return digit(b, c);
+        public FingerTreeDigit<V, T> getTail(FingerTreeFactory<V, T> factory) {
+            return factory.digit(b, c);
         }
 
         @Override
-        public <V> FingerTreeNode<V, T> toTailNode(FingerTreeFactory<V, T> factory) {
+        public FingerTreeNode<V, T> toTailNode(FingerTreeFactory<V, T> factory) {
             return factory.node(b, c);
         }
 
         @Override
-        public FingerTreeDigit<T> getInit() {
-            return digit(a, b);
+        public FingerTreeDigit<V, T> getInit(FingerTreeFactory<V, T> factory) {
+            return factory.digit(a, b);
         }
 
         @Override
-        public <V> FingerTreeNode<V, T> toInitNode(FingerTreeFactory<V, T> factory) {
+        public FingerTreeNode<V, T> toInitNode(FingerTreeFactory<V, T> factory) {
             return factory.node(a, b);
         }
 
@@ -401,19 +388,19 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <V> DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
+        public DigitSplit<V, T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
             V accumA = factory.mappend(accum, factory.measure(a));
             if (p.apply(accumA))
-                return new DigitSplit<T>(null, a, digit(b, c));
+                return new DigitSplit<V, T>(null, a, factory.digit(b, c));
             V accumB = factory.mappend(accumA, factory.measure(b));
             if (p.apply(accumB))
-                return new DigitSplit<T>(digit(a), b, digit(c));
-            return new DigitSplit<T>(digit(a, b), c, null);
+                return new DigitSplit<V, T>(factory.digit(a), b, factory.digit(c));
+            return new DigitSplit<V, T>(factory.digit(a, b), c, null);
         }
 
         @Override
-        public <V> FingerTree<V, T> toTree(FingerTreeFactory<V, T> factory) {
-            return factory.deep(digit(a, b), factory.nodeFactory().emptyTree, digit(c));
+        public FingerTree<V, T> toTree(FingerTreeFactory<V, T> factory) {
+            return factory.deep(factory.digit(a, b), factory.nodeFactory().emptyTree, factory.digit(c));
         }
 
         @Override
@@ -441,8 +428,8 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public FingerTreeDigit<T> reverseAndMap(Function<T, T> f) {
-            return digit(f.apply(c), f.apply(b), f.apply(a));
+        public FingerTreeDigit<V, T> reverseAndMap(FingerTreeFactory<V, T> factory, Function<T, T> f) {
+            return factory.digit(f.apply(c), f.apply(b), f.apply(a));
         }
 
         @Override
@@ -455,7 +442,7 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <V> Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p) {
+        public Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p) {
             if (p.apply(factory.measure(a)))
                 return Option.some(a);
             if (p.apply(factory.measure(b)))
@@ -466,35 +453,36 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
     }
 
-    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+    @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
     @EqualsAndHashCode(callSuper = false)
     @ToString(callSuper = false)
-    static final class Digit4<T> extends FingerTreeDigit<T> {
+    static final class Digit4<V, T> extends FingerTreeDigit<V, T> {
         private static final long serialVersionUID = 1441409605217019592L;
 
+        final V measure;
         final T a;
         final T b;
         final T c;
         final T d;
 
         @Override
-        public FingerTreeDigit<T> prepend(T value) {
+        public FingerTreeDigit<V, T> prepend(FingerTreeFactory<V, T> factory, T value) {
             throw new UnsupportedOperationException("Cannot prepend to Digit4");
         }
 
         @Override
-        public FingerTreeDigit<T> append(T value) {
+        public FingerTreeDigit<V, T> append(FingerTreeFactory<V, T> factory, T value) {
             throw new UnsupportedOperationException("Cannot append to Digit4");
         }
 
         @Override
-        public <O> FingerTreeDigit<O> map(Function<? super T, O> f) {
-            return digit(f.apply(a), f.apply(b), f.apply(c), f.apply(d));
+        public <U, O> FingerTreeDigit<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f) {
+            return factory.digit(f.apply(a), f.apply(b), f.apply(c), f.apply(d));
         }
 
         @Override
-        public <V> V measure(FingerTreeFactory<V, T> factory) {
-            return factory.measure(a, b, c, d);
+        public V measure() {
+            return measure;
         }
 
         @SuppressWarnings("unchecked")
@@ -515,22 +503,22 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public FingerTreeDigit<T> getTail() {
-            return digit(b, c, d);
+        public FingerTreeDigit<V, T> getTail(FingerTreeFactory<V, T> factory) {
+            return factory.digit(b, c, d);
         }
 
         @Override
-        public <V> FingerTreeNode<V, T> toTailNode(FingerTreeFactory<V, T> factory) {
+        public FingerTreeNode<V, T> toTailNode(FingerTreeFactory<V, T> factory) {
             return factory.node(b, c, d);
         }
 
         @Override
-        public FingerTreeDigit<T> getInit() {
-            return digit(a, b, c);
+        public FingerTreeDigit<V, T> getInit(FingerTreeFactory<V, T> factory) {
+            return factory.digit(a, b, c);
         }
 
         @Override
-        public <V> FingerTreeNode<V, T> toInitNode(FingerTreeFactory<V, T> factory) {
+        public FingerTreeNode<V, T> toInitNode(FingerTreeFactory<V, T> factory) {
             return factory.node(a, b, c);
         }
 
@@ -540,22 +528,22 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <V> DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
+        public DigitSplit<V, T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
             V accumA = factory.mappend(accum, factory.measure(a));
             if (p.apply(accumA))
-                return new DigitSplit<T>(null, a, digit(b, c, d));
+                return new DigitSplit<V, T>(null, a, factory.digit(b, c, d));
             V accumB = factory.mappend(accumA, factory.measure(b));
             if (p.apply(accumB))
-                return new DigitSplit<T>(digit(a), b, digit(c, d));
+                return new DigitSplit<V, T>(factory.digit(a), b, factory.digit(c, d));
             V accumC = factory.mappend(accumB, factory.measure(c));
             if (p.apply(accumC))
-                return new DigitSplit<T>(digit(a, b), c, digit(d));
-            return new DigitSplit<T>(digit(a, b, c), d, null);
+                return new DigitSplit<V, T>(factory.digit(a, b), c, factory.digit(d));
+            return new DigitSplit<V, T>(factory.digit(a, b, c), d, null);
         }
 
         @Override
-        public <V> FingerTree<V, T> toTree(FingerTreeFactory<V, T> factory) {
-            return factory.deep(digit(a, b), factory.nodeFactory().emptyTree, digit(c, d));
+        public FingerTree<V, T> toTree(FingerTreeFactory<V, T> factory) {
+            return factory.deep(factory.digit(a, b), factory.nodeFactory().emptyTree, factory.digit(c, d));
         }
 
         @Override
@@ -588,8 +576,8 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public FingerTreeDigit<T> reverseAndMap(Function<T, T> f) {
-            return digit(f.apply(d), f.apply(c), f.apply(b), f.apply(a));
+        public FingerTreeDigit<V, T> reverseAndMap(FingerTreeFactory<V, T> factory, Function<T, T> f) {
+            return factory.digit(f.apply(d), f.apply(c), f.apply(b), f.apply(a));
         }
 
         @Override
@@ -603,7 +591,7 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <V> Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p) {
+        public Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p) {
             if (p.apply(factory.measure(a)))
                 return Option.some(a);
             if (p.apply(factory.measure(b)))

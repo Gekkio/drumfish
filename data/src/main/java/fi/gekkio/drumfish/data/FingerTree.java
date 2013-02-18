@@ -1,7 +1,5 @@
 package fi.gekkio.drumfish.data;
 
-import static fi.gekkio.drumfish.data.FingerTreeDigit.digit;
-
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.util.Iterator;
@@ -648,9 +646,9 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         @Override
         public FingerTree<V, T> prepend(T value) {
             Preconditions.checkNotNull(value, "value cannot be null");
-            val left = digit(value);
+            val left = factory.digit(value);
             val middle = factory.nodeFactory().emptyTree;
-            val right = digit(a);
+            val right = factory.digit(a);
 
             return factory.deep(left, middle, right);
         }
@@ -658,9 +656,9 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         @Override
         public FingerTree<V, T> append(T value) {
             Preconditions.checkNotNull(value, "value cannot be null");
-            val left = digit(a);
+            val left = factory.digit(a);
             val middle = factory.nodeFactory().emptyTree;
-            val right = digit(value);
+            val right = factory.digit(value);
 
             return factory.deep(left, middle, right);
         }
@@ -813,9 +811,9 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         @Getter
         private final FingerTreeFactory<V, T> factory;
         private final V measure;
-        private final FingerTreeDigit<T> left;
+        private final FingerTreeDigit<V, T> left;
         private final FingerTree<V, FingerTreeNode<V, T>> middle;
-        private final FingerTreeDigit<T> right;
+        private final FingerTreeDigit<V, T> right;
 
         private transient int hashCode;
 
@@ -833,11 +831,11 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         public FingerTree<V, T> prepend(T value) {
             Preconditions.checkNotNull(value, "value cannot be null");
             if (left instanceof Digit4) {
-                val left = digit(value, this.left.getHead());
+                val left = factory.digit(value, this.left.getHead());
                 val middle = this.middle.prepend(this.left.toTailNode(factory));
                 return factory.deep(factory.mappend(factory.measure(value), measure), left, middle, right);
             }
-            val left = this.left.prepend(value);
+            val left = this.left.prepend(factory, value);
             return factory.deep(factory.mappend(factory.measure(value), measure), left, middle, right);
         }
 
@@ -846,10 +844,10 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
             Preconditions.checkNotNull(value, "value cannot be null");
             if (right instanceof Digit4) {
                 val middle = this.middle.append(this.right.toInitNode(factory));
-                val right = digit(this.right.getLast(), value);
+                val right = factory.digit(this.right.getLast(), value);
                 return factory.deep(factory.mappend(measure, factory.measure(value)), left, middle, right);
             }
-            val right = this.right.append(value);
+            val right = this.right.append(factory, value);
             return factory.deep(factory.mappend(measure, factory.measure(value)), left, middle, right);
         }
 
@@ -865,7 +863,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         public <U, O> FingerTree<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f) {
-            return factory.deep(left.map(f), middle.map(factory.nodeFactory(), new NodeMapper<T, U, O>(factory, f)), right.map(f));
+            return factory.deep(left.map(factory, f), middle.map(factory.nodeFactory(), new NodeMapper<T, U, O>(factory, f)), right.map(factory, f));
         }
 
         @Override
@@ -936,21 +934,21 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
             return Tuple2.of(split.left, split.right.prepend(split.pivot));
         }
 
-        protected FingerTree<V, T> deepL(FingerTreeDigit<T> left, FingerTree<V, FingerTreeNode<V, T>> center, FingerTreeDigit<T> right) {
+        protected FingerTree<V, T> deepL(@Nullable FingerTreeDigit<V, T> left, FingerTree<V, FingerTreeNode<V, T>> center, FingerTreeDigit<V, T> right) {
             if (left != null)
                 return factory.deep(left, center, right);
             val cView = center.viewL();
             if (!cView.isEmpty())
-                return factory.deep(cView.getLeft().toDigit(), cView.getRight(), right);
+                return factory.deep(cView.getLeft().toDigit(factory), cView.getRight(), right);
             return right.toTree(factory);
         }
 
-        protected FingerTree<V, T> deepR(FingerTreeDigit<T> left, FingerTree<V, FingerTreeNode<V, T>> center, @Nullable FingerTreeDigit<T> right) {
+        protected FingerTree<V, T> deepR(FingerTreeDigit<V, T> left, FingerTree<V, FingerTreeNode<V, T>> center, @Nullable FingerTreeDigit<V, T> right) {
             if (right != null)
                 return factory.deep(left, center, right);
             val cView = center.viewR();
             if (!cView.isEmpty())
-                return factory.deep(left, cView.getLeft(), cView.getRight().toDigit());
+                return factory.deep(left, cView.getLeft(), cView.getRight().toDigit(factory));
             return left.toTree(factory);
         }
 
@@ -960,6 +958,11 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
                 private static final long serialVersionUID = -7520792642423138663L;
 
                 @Override
+                public FingerTreeFactory<V, T> getFactory() {
+                    return factory;
+                }
+
+                @Override
                 public boolean isEmpty() {
                     return false;
                 }
@@ -967,13 +970,13 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
                 @Override
                 public Option<T> getHead() {
                     Deep<V, T> me = Deep.this;
-                    return Option.some(me.left.getTail().getHead());
+                    return Option.some(me.left.getTail(factory).getHead());
                 }
 
                 @Override
                 public T getHeadUnsafe() {
                     Deep<V, T> me = Deep.this;
-                    return me.left.getTail().getHead();
+                    return me.left.getTail(factory).getHead();
                 }
 
                 @Override
@@ -991,12 +994,17 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
                 @Override
                 protected FingerTree<V, T> constructTree() {
                     Deep<V, T> me = Deep.this;
-                    return me.factory.deep(me.left.getTail(), me.middle, me.right);
+                    return me.factory.deep(me.left.getTail(factory), me.middle, me.right);
                 }
 
             }
             class ViewLTreeRotate extends LazyTree<V, T> {
                 private static final long serialVersionUID = 3271655120045995047L;
+
+                @Override
+                public FingerTreeFactory<V, T> getFactory() {
+                    return factory;
+                }
 
                 @Override
                 public boolean isEmpty() {
@@ -1019,6 +1027,11 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
                 private static final long serialVersionUID = 2682626635226309229L;
 
                 @Override
+                public FingerTreeFactory<V, T> getFactory() {
+                    return factory;
+                }
+
+                @Override
                 public boolean isEmpty() {
                     return false;
                 }
@@ -1038,7 +1051,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
                 @Override
                 public Option<T> getLast() {
                     Deep<V, T> me = Deep.this;
-                    return Option.some(me.right.getInit().getLast());
+                    return Option.some(me.right.getInit(factory).getLast());
                 }
 
                 @Override
@@ -1050,12 +1063,17 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
                 @Override
                 protected FingerTree<V, T> constructTree() {
                     Deep<V, T> me = Deep.this;
-                    return me.factory.deep(me.left, me.middle, me.right.getInit());
+                    return me.factory.deep(me.left, me.middle, me.right.getInit(factory));
                 }
 
             }
             class ViewRTreeRotate extends LazyTree<V, T> {
                 private static final long serialVersionUID = -5170541811958183205L;
+
+                @Override
+                public FingerTreeFactory<V, T> getFactory() {
+                    return factory;
+                }
 
                 @Override
                 public boolean isEmpty() {
@@ -1076,14 +1094,14 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
             val mView = middle.viewL();
             if (mView.isEmpty())
                 return right.toTree(factory);
-            return factory.deep(factory.mappend(middle, right), mView.getLeft().toDigit(), mView.getRight(), right);
+            return factory.deep(factory.mappend(middle, right), mView.getLeft().toDigit(factory), mView.getRight(), right);
         }
 
         protected FingerTree<V, T> rotateRight() {
             val mView = middle.viewR();
             if (mView.isEmpty())
                 return left.toTree(factory);
-            return factory.deep(factory.mappend(left, middle), left, mView.getLeft(), mView.getRight().toDigit());
+            return factory.deep(factory.mappend(left, middle), left, mView.getLeft(), mView.getRight().toDigit(factory));
         }
 
         @Override
@@ -1138,63 +1156,63 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
             FingerTree<V, FingerTreeNode<V, T>> newMiddle;
             if (d1 instanceof Digit1) {
-                val dl = (Digit1<T>) d1;
+                val dl = (Digit1<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             } else if (d1 instanceof Digit2) {
-                val dl = (Digit2<T>) d1;
+                val dl = (Digit2<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             } else if (d1 instanceof Digit3) {
-                val dl = (Digit3<T>) d1;
+                val dl = (Digit3<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             } else {
-                val dl = (Digit4<T>) d1;
+                val dl = (Digit4<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             }
@@ -1221,63 +1239,63 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
             FingerTree<V, FingerTreeNode<V, T>> newMiddle;
             if (d1 instanceof Digit1) {
-                val dl = (Digit1<T>) d1;
+                val dl = (Digit1<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, a, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, a, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, a, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, a, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             } else if (d1 instanceof Digit2) {
-                val dl = (Digit2<T>) d1;
+                val dl = (Digit2<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, a, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, a, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, a, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, a, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             } else if (d1 instanceof Digit3) {
-                val dl = (Digit3<T>) d1;
+                val dl = (Digit3<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, a, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, a, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, a, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, a, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             } else {
-                val dl = (Digit4<T>) d1;
+                val dl = (Digit4<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, a, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, a, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, a, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, a, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             }
@@ -1302,63 +1320,63 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
             FingerTree<V, FingerTreeNode<V, T>> newMiddle;
             if (d1 instanceof Digit1) {
-                val dl = (Digit1<T>) d1;
+                val dl = (Digit1<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, a, b, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, a, b, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, a, b, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, a, b, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             } else if (d1 instanceof Digit2) {
-                val dl = (Digit2<T>) d1;
+                val dl = (Digit2<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, a, b, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, a, b, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, a, b, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, a, b, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             } else if (d1 instanceof Digit3) {
-                val dl = (Digit3<T>) d1;
+                val dl = (Digit3<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, a, b, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, a, b, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, a, b, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, a, b, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             } else {
-                val dl = (Digit4<T>) d1;
+                val dl = (Digit4<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, a, b, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, a, b, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, a, b, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, a, b, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             }
@@ -1384,63 +1402,63 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
             FingerTree<V, FingerTreeNode<V, T>> newMiddle;
             if (d1 instanceof Digit1) {
-                val dl = (Digit1<T>) d1;
+                val dl = (Digit1<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, a, b, c, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, a, b, c, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, a, b, c, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, a, b, c, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             } else if (d1 instanceof Digit2) {
-                val dl = (Digit2<T>) d1;
+                val dl = (Digit2<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, a, b, c, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, a, b, c, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, a, b, c, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, a, b, c, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             } else if (d1 instanceof Digit3) {
-                val dl = (Digit3<T>) d1;
+                val dl = (Digit3<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, a, b, c, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, a, b, c, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, a, b, c, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, a, b, c, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             } else {
-                val dl = (Digit4<T>) d1;
+                val dl = (Digit4<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, a, b, c, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, a, b, c, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, a, b, c, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, a, b, c, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             }
@@ -1467,63 +1485,63 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
             FingerTree<V, FingerTreeNode<V, T>> newMiddle;
             if (d1 instanceof Digit1) {
-                val dl = (Digit1<T>) d1;
+                val dl = (Digit1<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, a, b, c, d, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, a, b, c, d, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, a, b, c, d, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, a, b, c, d, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             } else if (d1 instanceof Digit2) {
-                val dl = (Digit2<T>) d1;
+                val dl = (Digit2<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, a, b, c, d, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, a, b, c, d, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, a, b, c, d, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, a, b, c, d, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             } else if (d1 instanceof Digit3) {
-                val dl = (Digit3<T>) d1;
+                val dl = (Digit3<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, a, b, c, d, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, a, b, c, d, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, a, b, c, d, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, a, b, c, d, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             } else {
-                val dl = (Digit4<T>) d1;
+                val dl = (Digit4<V, T>) d1;
                 if (d2 instanceof Digit1) {
-                    val dr = (Digit1<T>) d2;
+                    val dr = (Digit1<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, a, b, c, d, dr.a, m2);
                 } else if (d2 instanceof Digit2) {
-                    val dr = (Digit2<T>) d2;
+                    val dr = (Digit2<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, a, b, c, d, dr.a, dr.b, m2);
                 } else if (d2 instanceof Digit3) {
-                    val dr = (Digit3<T>) d2;
+                    val dr = (Digit3<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, a, b, c, d, dr.a, dr.b, dr.c, m2);
                 } else {
-                    val dr = (Digit4<T>) d2;
+                    val dr = (Digit4<V, T>) d2;
                     newMiddle = factory.concatNodes(m1, dl.a, dl.b, dl.c, dl.d, a, b, c, d, dr.a, dr.b, dr.c, dr.d, m2);
                 }
             }
@@ -1559,7 +1577,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         protected FingerTree<V, T> reverseAndMap(Function<T, T> f) {
-            return factory.deep(right.reverseAndMap(f), middle.reverseAndMap(new NodeReverser<V, T>(factory, f)), left.reverseAndMap(f));
+            return factory.deep(right.reverseAndMap(factory, f), middle.reverseAndMap(new NodeReverser<V, T>(factory, f)), left.reverseAndMap(factory, f));
         }
 
         @Override
@@ -1574,7 +1592,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         public Option<T> find(Predicate<? super V> p) {
-            if (p.apply(left.measure(factory)))
+            if (p.apply(left.measure()))
                 return left.find(factory, p);
             if (p.apply(middle.measure())) {
                 for (FingerTreeNode<V, T> node : middle.find(p)) {
@@ -1582,7 +1600,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
                 }
                 return Option.none();
             }
-            if (p.apply(right.measure(factory))) {
+            if (p.apply(right.measure())) {
                 return right.find(factory, p);
             }
             return Option.none();

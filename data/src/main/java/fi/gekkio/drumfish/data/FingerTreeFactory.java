@@ -12,6 +12,10 @@ import com.google.common.base.Preconditions;
 import fi.gekkio.drumfish.data.FingerTree.Deep;
 import fi.gekkio.drumfish.data.FingerTree.Empty;
 import fi.gekkio.drumfish.data.FingerTree.Single;
+import fi.gekkio.drumfish.data.FingerTreeDigit.Digit1;
+import fi.gekkio.drumfish.data.FingerTreeDigit.Digit2;
+import fi.gekkio.drumfish.data.FingerTreeDigit.Digit3;
+import fi.gekkio.drumfish.data.FingerTreeDigit.Digit4;
 import fi.gekkio.drumfish.data.FingerTreeNode.Node2;
 import fi.gekkio.drumfish.data.FingerTreeNode.Node3;
 import fi.gekkio.drumfish.lang.Monoid;
@@ -132,16 +136,16 @@ public class FingerTreeFactory<V, T> implements Serializable {
         return monoid.mappend(a, b);
     }
 
-    V mappend(V a, FingerTreeDigit<T> b) {
-        return mappend(a, b.measure(this));
+    V mappend(V a, FingerTreeDigit<V, T> b) {
+        return mappend(a, b.measure());
     }
 
-    V mappend(FingerTreeDigit<T> a, FingerTree<V, ?> b) {
-        return mappend(a.measure(this), b.measure());
+    V mappend(FingerTreeDigit<V, T> a, FingerTree<V, ?> b) {
+        return mappend(a.measure(), b.measure());
     }
 
-    V mappend(FingerTree<V, ?> a, FingerTreeDigit<T> b) {
-        return mappend(a.measure(), b.measure(this));
+    V mappend(FingerTree<V, ?> a, FingerTreeDigit<V, T> b) {
+        return mappend(a.measure(), b.measure());
     }
 
     V mappend(V a, FingerTree<V, ?> b) {
@@ -168,11 +172,11 @@ public class FingerTreeFactory<V, T> implements Serializable {
         return monoid.mappend(monoid.mappend(monoid.mappend(measure(a), measure(b)), measure(c)), measure(d));
     }
 
-    FingerTree<V, T> deep(FingerTreeDigit<T> left, FingerTree<V, FingerTreeNode<V, T>> middle, FingerTreeDigit<T> right) {
-        return new Deep<V, T>(this, mappend(left.measure(this), middle.measure(), right.measure(this)), left, middle, right);
+    FingerTree<V, T> deep(FingerTreeDigit<V, T> left, FingerTree<V, FingerTreeNode<V, T>> middle, FingerTreeDigit<V, T> right) {
+        return new Deep<V, T>(this, mappend(left.measure(), middle.measure(), right.measure()), left, middle, right);
     }
 
-    FingerTree<V, T> deep(V measure, FingerTreeDigit<T> left, FingerTree<V, FingerTreeNode<V, T>> middle, FingerTreeDigit<T> right) {
+    FingerTree<V, T> deep(V measure, FingerTreeDigit<V, T> left, FingerTree<V, FingerTreeNode<V, T>> middle, FingerTreeDigit<V, T> right) {
         return new Deep<V, T>(this, measure, left, middle, right);
     }
 
@@ -233,6 +237,22 @@ public class FingerTreeFactory<V, T> implements Serializable {
 
     FingerTreeNode<V, T> node(T a, T b, T c) {
         return new Node3<V, T>(measure(a, b, c), a, b, c);
+    }
+
+    FingerTreeDigit<V, T> digit(T a) {
+        return new Digit1<V, T>(measure(a), a);
+    }
+
+    FingerTreeDigit<V, T> digit(T a, T b) {
+        return new Digit2<V, T>(measure(a, b), a, b);
+    }
+
+    FingerTreeDigit<V, T> digit(T a, T b, T c) {
+        return new Digit3<V, T>(measure(a, b, c), a, b, c);
+    }
+
+    FingerTreeDigit<V, T> digit(T a, T b, T c, T d) {
+        return new Digit4<V, T>(measure(a, b, c, d), a, b, c, d);
     }
 
     private static final class FtNodeMeasurement<V, T> implements Function<FingerTreeNode<V, T>, V>, Serializable {

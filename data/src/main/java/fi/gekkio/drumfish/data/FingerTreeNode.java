@@ -1,7 +1,5 @@
 package fi.gekkio.drumfish.data;
 
-import static fi.gekkio.drumfish.data.FingerTreeDigit.digit;
-
 import java.io.Serializable;
 import java.util.Iterator;
 
@@ -32,9 +30,9 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
 
     public abstract <U, O> FingerTreeNode<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f);
 
-    public abstract DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum);
+    public abstract DigitSplit<V, T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum);
 
-    public abstract FingerTreeDigit<T> toDigit();
+    public abstract FingerTreeDigit<V, T> toDigit(FingerTreeFactory<V, T> factory);
 
     public abstract void print(StringBuilder sb, String padding, Printer<? super T> printer);
 
@@ -81,16 +79,16 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
+        public DigitSplit<V, T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
             V accumA = factory.mappend(accum, factory.measure(a));
             if (p.apply(accumA))
-                return new DigitSplit<T>(null, a, digit(b));
-            return new DigitSplit<T>(digit(a), b, null);
+                return new DigitSplit<V, T>(null, a, factory.digit(b));
+            return new DigitSplit<V, T>(factory.digit(a), b, null);
         }
 
         @Override
-        public FingerTreeDigit<T> toDigit() {
-            return digit(a, b);
+        public FingerTreeDigit<V, T> toDigit(FingerTreeFactory<V, T> factory) {
+            return factory.digit(a, b);
         }
 
         @Override
@@ -170,19 +168,19 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
+        public DigitSplit<V, T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
             V accumA = factory.mappend(accum, factory.measure(a));
             if (p.apply(accumA))
-                return new DigitSplit<T>(null, a, digit(b));
+                return new DigitSplit<V, T>(null, a, factory.digit(b));
             V accumB = factory.mappend(accumA, factory.measure(b));
             if (p.apply(accumB))
-                return new DigitSplit<T>(digit(a), b, digit(c));
-            return new DigitSplit<T>(digit(a, b), c, null);
+                return new DigitSplit<V, T>(factory.digit(a), b, factory.digit(c));
+            return new DigitSplit<V, T>(factory.digit(a, b), c, null);
         }
 
         @Override
-        public FingerTreeDigit<T> toDigit() {
-            return digit(a, b, c);
+        public FingerTreeDigit<V, T> toDigit(FingerTreeFactory<V, T> factory) {
+            return factory.digit(a, b, c);
         }
 
         @Override
