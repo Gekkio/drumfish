@@ -57,7 +57,7 @@ public final class FingerTreeFactory<V, T> implements Serializable {
         private static final long serialVersionUID = -6437051207514239436L;
 
         @Override
-        protected FingerTreeFactory<V, T> getFactory() {
+        public FingerTreeFactory<V, T> getFactory() {
             return FingerTreeFactory.this;
         }
     }

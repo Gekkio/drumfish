@@ -8,7 +8,6 @@ import java.util.Iterator;
 
 import javax.annotation.Nullable;
 
-import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -70,7 +69,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
     public abstract int getSize();
 
-    protected abstract FingerTreeFactory<V, T> getFactory();
+    public abstract FingerTreeFactory<V, T> getFactory();
 
     public Tuple2<FingerTree<V, T>, FingerTree<V, T>> split(Predicate<? super V> p) {
         if (this.isEmpty())
@@ -398,7 +397,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
     static final class Single<V, T> extends FingerTree<V, T> {
         private static final long serialVersionUID = -567427169446878029L;
 
-        @Getter(AccessLevel.PROTECTED)
+        @Getter
         private final FingerTreeFactory<V, T> factory;
         private final T a;
 
@@ -537,7 +536,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
     static final class Deep<V, T> extends FingerTree<V, T> {
         private static final long serialVersionUID = 2406435051250366159L;
 
-        @Getter(AccessLevel.PROTECTED)
+        @Getter
         private final FingerTreeFactory<V, T> factory;
         private final V measure;
         private final FingerTreeDigit<T> left;
@@ -1196,7 +1195,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         protected abstract FingerTree<V, T> constructTree();
 
         @Override
-        protected FingerTreeFactory<V, T> getFactory() {
+        public FingerTreeFactory<V, T> getFactory() {
             return unwrap().getFactory();
         }
 
