@@ -53,6 +53,8 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
 
     public abstract Iterator<T> reverseIterator();
 
+    public abstract FingerTreeDigit<T> reverseAndMap(Function<T, T> f);
+
     @Value
     static class DigitSplit<T> implements Serializable {
         private static final long serialVersionUID = -5364760129719273207L;
@@ -172,6 +174,11 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
             return 1;
         }
 
+        @Override
+        public FingerTreeDigit<T> reverseAndMap(Function<T, T> f) {
+            return digit(f.apply(a));
+        }
+
     }
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -277,6 +284,10 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
             return 2;
         }
 
+        @Override
+        public FingerTreeDigit<T> reverseAndMap(Function<T, T> f) {
+            return digit(f.apply(b), f.apply(a));
+        }
     }
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -389,6 +400,11 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         @Override
         public int getSize() {
             return 3;
+        }
+
+        @Override
+        public FingerTreeDigit<T> reverseAndMap(Function<T, T> f) {
+            return digit(f.apply(c), f.apply(b), f.apply(a));
         }
 
     }
@@ -512,6 +528,11 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         @Override
         public int getSize() {
             return 4;
+        }
+
+        @Override
+        public FingerTreeDigit<T> reverseAndMap(Function<T, T> f) {
+            return digit(f.apply(d), f.apply(c), f.apply(b), f.apply(a));
         }
 
     }

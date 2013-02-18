@@ -37,6 +37,8 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
 
     public abstract Iterator<T> reverseIterator();
 
+    public abstract FingerTreeNode<V, T> reverseAndMap(FingerTreeFactory<V, T> factory, Function<T, T> f);
+
     @RequiredArgsConstructor
     @EqualsAndHashCode(callSuper = false, exclude = "measure")
     @ToString(callSuper = false)
@@ -99,6 +101,11 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
         @Override
         public int getSize() {
             return 2;
+        }
+
+        @Override
+        public FingerTreeNode<V, T> reverseAndMap(FingerTreeFactory<V, T> factory, Function<T, T> f) {
+            return factory.node(f.apply(b), f.apply(a));
         }
     }
 
@@ -175,6 +182,10 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
             return 3;
         }
 
+        @Override
+        public FingerTreeNode<V, T> reverseAndMap(FingerTreeFactory<V, T> factory, Function<T, T> f) {
+            return factory.node(f.apply(c), f.apply(b), f.apply(a));
+        }
     }
 
     @RequiredArgsConstructor
@@ -189,6 +200,17 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
             return input.map(factory, f);
         }
 
+    }
+
+    @RequiredArgsConstructor
+    static final class NodeReverser<V, T> implements Function<FingerTreeNode<V, T>, FingerTreeNode<V, T>> {
+        private final FingerTreeFactory<V, T> factory;
+        private final Function<T, T> f;
+
+        @Override
+        public FingerTreeNode<V, T> apply(FingerTreeNode<V, T> input) {
+            return input.reverseAndMap(factory, f);
+        }
     }
 
     @RequiredArgsConstructor

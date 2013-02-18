@@ -16,6 +16,7 @@ import lombok.val;
 import lombok.experimental.Value;
 
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -29,6 +30,7 @@ import fi.gekkio.drumfish.data.FingerTreeNode.NodeIterator;
 import fi.gekkio.drumfish.data.FingerTreeNode.NodeMapper;
 import fi.gekkio.drumfish.data.FingerTreeNode.NodePrinter;
 import fi.gekkio.drumfish.data.FingerTreeNode.NodeReverseIterator;
+import fi.gekkio.drumfish.data.FingerTreeNode.NodeReverser;
 import fi.gekkio.drumfish.lang.LazyIterator;
 import fi.gekkio.drumfish.lang.Option;
 import fi.gekkio.drumfish.lang.Tuple2;
@@ -70,6 +72,10 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
     public abstract int getSize();
 
     public abstract FingerTreeFactory<V, T> getFactory();
+
+    public abstract FingerTree<V, T> reverse();
+
+    protected abstract FingerTree<V, T> reverseAndMap(Function<T, T> f);
 
     public FingerTree<V, T> takeUntil(Predicate<? super V> p) {
         return split(p).a;
@@ -405,6 +411,15 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
             return 0;
         }
 
+        @Override
+        public FingerTree<V, T> reverse() {
+            return this;
+        }
+
+        @Override
+        protected FingerTree<V, T> reverseAndMap(Function<T, T> f) {
+            return this;
+        }
     }
 
     @RequiredArgsConstructor
@@ -542,6 +557,16 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         @Override
         public int getSize() {
             return 1;
+        }
+
+        @Override
+        public FingerTree<V, T> reverse() {
+            return this;
+        }
+
+        @Override
+        protected FingerTree<V, T> reverseAndMap(Function<T, T> f) {
+            return factory.tree(f.apply(a));
         }
 
     }
@@ -1189,6 +1214,16 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
             return left.getSize() + middle.getSize() + right.getSize();
         }
 
+        @Override
+        public FingerTree<V, T> reverse() {
+            return reverseAndMap(Functions.<T> identity());
+        }
+
+        @Override
+        protected FingerTree<V, T> reverseAndMap(Function<T, T> f) {
+            return factory.deep(right.reverseAndMap(f), middle.reverseAndMap(new NodeReverser<V, T>(factory, f)), left.reverseAndMap(f));
+        }
+
     }
 
     @RequiredArgsConstructor
@@ -1342,6 +1377,16 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         @Override
         public int getSize() {
             return unwrap().getSize();
+        }
+
+        @Override
+        public FingerTree<V, T> reverse() {
+            return unwrap().reverse();
+        }
+
+        @Override
+        protected FingerTree<V, T> reverseAndMap(Function<T, T> f) {
+            return unwrap().reverseAndMap(f);
         }
 
     }
