@@ -17,7 +17,7 @@ import fi.gekkio.drumfish.data.FingerTreeNode.Node3;
 import fi.gekkio.drumfish.lang.Monoid;
 
 @RequiredArgsConstructor
-public final class FingerTreeFactory<V, T> implements Serializable {
+public class FingerTreeFactory<V, T> implements Serializable {
     private static final long serialVersionUID = -3600209950347929148L;
 
     /**
