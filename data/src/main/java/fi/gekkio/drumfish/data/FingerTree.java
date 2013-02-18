@@ -71,6 +71,20 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
     public abstract FingerTreeFactory<V, T> getFactory();
 
+    public FingerTree<V, T> takeUntil(Predicate<? super V> p) {
+        return split(p).a;
+    }
+
+    public FingerTree<V, T> dropUntil(Predicate<? super V> p) {
+        return split(p).b;
+    }
+
+    public Option<T> find(Predicate<? super V> p) {
+        if (this.isEmpty())
+            return Option.none();
+        return Option.some(split(p, getFactory().mempty()).pivot);
+    }
+
     public Tuple2<FingerTree<V, T>, FingerTree<V, T>> split(Predicate<? super V> p) {
         if (this.isEmpty())
             return Tuple2.of(this, this);
