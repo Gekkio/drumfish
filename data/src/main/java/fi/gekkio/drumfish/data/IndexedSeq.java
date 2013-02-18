@@ -2,11 +2,9 @@ package fi.gekkio.drumfish.data;
 
 import java.io.Serializable;
 import java.util.AbstractList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.NoSuchElementException;
 
 import lombok.val;
 
@@ -41,6 +39,21 @@ public class IndexedSeq<T> implements Iterable<T>, Serializable {
 
     public static <T> IndexedSeq<T> of(Iterable<T> elements) {
         return new IndexedSeq<T>(FACTORY.<T> cast().tree(elements));
+    }
+
+    public List<T> asList() {
+        class ListAdapter extends AbstractList<T> {
+            @Override
+            public T get(int index) {
+                return IndexedSeq.this.get(index);
+            }
+
+            @Override
+            public int size() {
+                return IndexedSeq.this.size();
+            }
+        }
+        return new ListAdapter();
     }
 
     @Override
