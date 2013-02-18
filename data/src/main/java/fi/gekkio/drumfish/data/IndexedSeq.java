@@ -50,7 +50,7 @@ public class IndexedSeq<T> implements Iterable<T> {
         return new IndexedSeq<T>(tree.prepend(e));
     }
 
-    public <O> IndexedSeq<O> map(Function<T, O> f) {
+    public <O> IndexedSeq<O> map(Function<? super T, O> f) {
         return new IndexedSeq<O>(tree.map(FACTORY.<O> cast(), f));
     }
 
