@@ -1,14 +1,21 @@
 package fi.gekkio.drumfish.data;
 
 import java.io.Serializable;
+import java.util.AbstractList;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.NoSuchElementException;
 
 import lombok.val;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.UnmodifiableListIterator;
 
 import fi.gekkio.drumfish.lang.Monoids;
 
@@ -39,6 +46,85 @@ public class IndexedSeq<T> implements Iterable<T>, Serializable {
     @Override
     public Iterator<T> iterator() {
         return tree.iterator();
+    }
+
+    public int indexOf(T value) {
+        Preconditions.checkNotNull(value, "value cannot be null");
+
+        val it = listIterator();
+        while (it.hasNext())
+            if (value.equals(it.next()))
+                return it.previousIndex();
+
+        return -1;
+    }
+
+    public int lastIndexOf(T value) {
+        Preconditions.checkNotNull(value, "value cannot be null");
+
+        val it = listIterator();
+        while (it.hasPrevious())
+            if (value.equals(it.previous()))
+                return it.nextIndex();
+
+        return -1;
+    }
+
+    public ListIterator<T> listIterator() {
+        return listIterator(0);
+    }
+
+    public ListIterator<T> listIterator(final int index) {
+        Preconditions.checkElementIndex(index, tree.measure());
+
+        class ListIterator extends UnmodifiableListIterator<T> {
+            private int cursor = index;
+
+            @Override
+            public boolean hasNext() {
+                return cursor != size();
+            }
+
+            @Override
+            public T next() {
+                int i = cursor + 1;
+                T e = get(i);
+                cursor = i;
+                return e;
+            }
+
+            @Override
+            public boolean hasPrevious() {
+                return cursor != 0;
+            }
+
+            @Override
+            public T previous() {
+                int i = cursor - 1;
+                T e = get(i);
+                cursor = i;
+                return e;
+            }
+
+            @Override
+            public int nextIndex() {
+                return cursor;
+            }
+
+            @Override
+            public int previousIndex() {
+                return cursor - 1;
+            }
+        }
+        return new ListIterator();
+    }
+
+    public boolean contains(T value) {
+        for (T e : this) {
+            if (Objects.equal(e, value))
+                return true;
+        }
+        return false;
     }
 
     public int size() {
