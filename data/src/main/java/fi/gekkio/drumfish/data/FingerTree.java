@@ -29,6 +29,8 @@ import fi.gekkio.drumfish.data.FingerTreeDigit.Digit4;
 import fi.gekkio.drumfish.data.FingerTreeNode.NodeIterator;
 import fi.gekkio.drumfish.data.FingerTreeNode.NodeMapper;
 import fi.gekkio.drumfish.data.FingerTreeNode.NodePrinter;
+import fi.gekkio.drumfish.data.FingerTreeNode.NodeReverseIterator;
+import fi.gekkio.drumfish.lang.LazyIterator;
 import fi.gekkio.drumfish.lang.Option;
 import fi.gekkio.drumfish.lang.Tuple2;
 
@@ -61,6 +63,8 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
     public abstract Option<T> getHead();
 
     public abstract Option<T> getLast();
+
+    public abstract Iterator<T> reverseIterator();
 
     public abstract Split<V, T> split(Predicate<? super V> p, V accum);
 
@@ -308,6 +312,11 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         }
 
         @Override
+        public Iterator<T> reverseIterator() {
+            return Iterators.emptyIterator();
+        }
+
+        @Override
         public <U, O> FingerTree<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f) {
             return factory.emptyTree;
         }
@@ -425,6 +434,11 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         public Iterator<T> iterator() {
+            return Iterators.singletonIterator(a);
+        }
+
+        @Override
+        public Iterator<T> reverseIterator() {
             return Iterators.singletonIterator(a);
         }
 
@@ -568,7 +582,12 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         public Iterator<T> iterator() {
-            return Iterators.concat(left.iterator(), new NodeIterator<T>(middle), right.iterator());
+            return Iterators.concat(left.iterator(), new NodeIterator<T>(middle.iterator()), right.iterator());
+        }
+
+        @Override
+        public Iterator<T> reverseIterator() {
+            return Iterators.concat(right.reverseIterator(), new NodeReverseIterator<T>(middle.reverseIterator()), left.reverseIterator());
         }
 
         @Override
@@ -1183,7 +1202,28 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         public Iterator<T> iterator() {
-            return unwrap().iterator();
+            class LazyTreeIterator extends LazyIterator<T> {
+
+                @Override
+                protected Iterator<T> iterator() {
+                    return unwrap().iterator();
+                }
+
+            }
+            return new LazyTreeIterator();
+        }
+
+        @Override
+        public Iterator<T> reverseIterator() {
+            class LazyTreeReverseIterator extends LazyIterator<T> {
+
+                @Override
+                protected Iterator<T> iterator() {
+                    return unwrap().reverseIterator();
+                }
+
+            }
+            return new LazyTreeReverseIterator();
         }
 
         @Override

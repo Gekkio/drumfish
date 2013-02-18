@@ -35,6 +35,8 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
 
     public abstract int getSize();
 
+    public abstract Iterator<T> reverseIterator();
+
     @RequiredArgsConstructor
     @EqualsAndHashCode(callSuper = false, exclude = "measure")
     @ToString(callSuper = false)
@@ -54,6 +56,12 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
         @Override
         public Iterator<T> iterator() {
             return Iterators.forArray(a, b);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public Iterator<T> reverseIterator() {
+            return Iterators.forArray(b, a);
         }
 
         @Override
@@ -114,6 +122,12 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
         @Override
         public Iterator<T> iterator() {
             return Iterators.forArray(a, b, c);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public Iterator<T> reverseIterator() {
+            return Iterators.forArray(c, b, a);
         }
 
         @Override
@@ -179,26 +193,43 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
 
     @RequiredArgsConstructor
     static final class NodeIterator<T> extends UnmodifiableIterator<T> {
-        private final FingerTree<?, ? extends FingerTreeNode<?, T>> tree;
+        private final Iterator<? extends FingerTreeNode<?, T>> nodes;
 
-        private Iterator<? extends FingerTreeNode<?, T>> node;
-
-        private Iterator<T> inner;
+        private Iterator<T> elements;
 
         @Override
         public boolean hasNext() {
-            if (inner == null)
-                return !tree.isEmpty();
-            return inner.hasNext() || node.hasNext();
+            if (elements == null)
+                return nodes.hasNext();
+            return elements.hasNext() || nodes.hasNext();
         }
 
         @Override
         public T next() {
-            if (node == null)
-                node = tree.iterator();
-            if (inner == null || !inner.hasNext())
-                inner = node.next().iterator();
-            return inner.next();
+            if (elements == null || !elements.hasNext())
+                elements = nodes.next().iterator();
+            return elements.next();
+        }
+    }
+
+    @RequiredArgsConstructor
+    static final class NodeReverseIterator<T> extends UnmodifiableIterator<T> {
+        private final Iterator<? extends FingerTreeNode<?, T>> nodes;
+
+        private Iterator<T> elements;
+
+        @Override
+        public boolean hasNext() {
+            if (elements == null)
+                return nodes.hasNext();
+            return elements.hasNext() || nodes.hasNext();
+        }
+
+        @Override
+        public T next() {
+            if (elements == null || !elements.hasNext())
+                elements = nodes.next().reverseIterator();
+            return elements.next();
         }
     }
 

@@ -51,6 +51,8 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
 
     public abstract int getSize();
 
+    public abstract Iterator<T> reverseIterator();
+
     @Value
     static class DigitSplit<T> implements Serializable {
         private static final long serialVersionUID = -5364760129719273207L;
@@ -108,6 +110,11 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
 
         @Override
         public Iterator<T> iterator() {
+            return Iterators.singletonIterator(a);
+        }
+
+        @Override
+        public Iterator<T> reverseIterator() {
             return Iterators.singletonIterator(a);
         }
 
@@ -200,6 +207,12 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         @Override
         public Iterator<T> iterator() {
             return Iterators.forArray(a, b);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public Iterator<T> reverseIterator() {
+            return Iterators.forArray(b, a);
         }
 
         @Override
@@ -300,6 +313,12 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         @Override
         public Iterator<T> iterator() {
             return Iterators.forArray(a, b, c);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public Iterator<T> reverseIterator() {
+            return Iterators.forArray(c, b, a);
         }
 
         @Override
@@ -409,6 +428,12 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         @Override
         public Iterator<T> iterator() {
             return Iterators.forArray(a, b, c, d);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public Iterator<T> reverseIterator() {
+            return Iterators.forArray(d, c, b, a);
         }
 
         @Override
