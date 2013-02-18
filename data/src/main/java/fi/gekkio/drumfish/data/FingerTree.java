@@ -41,135 +41,14 @@ import fi.gekkio.drumfish.lang.Tuple2;
 public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
     private static final long serialVersionUID = 738107141098774175L;
 
-    private FingerTree() {
-    }
-
-    public abstract FingerTree<V, T> append(T value);
-
-    public abstract FingerTree<V, T> prepend(T value);
-
-    public abstract FingerTree<V, T> concat(FingerTree<V, T> tree);
-
-    public abstract FingerTree<V, T> concat(T a, FingerTree<V, T> tree);
-
-    public abstract FingerTree<V, T> concat(T a, T b, FingerTree<V, T> tree);
-
-    public abstract FingerTree<V, T> concat(T a, T b, T c, FingerTree<V, T> tree);
-
-    public abstract FingerTree<V, T> concat(T a, T b, T c, T d, FingerTree<V, T> tree);
-
-    public abstract V measure();
-
-    public abstract boolean isEmpty();
-
-    public abstract <U, O> FingerTree<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f);
-
-    public abstract Option<T> getHead();
-
-    public abstract Option<T> getLast();
-
-    public abstract Iterator<T> reverseIterator();
-
-    public abstract Split<V, T> split(Predicate<? super V> p, V accum);
-
-    public abstract int getSize();
-
-    public abstract FingerTreeFactory<V, T> getFactory();
-
-    public abstract FingerTree<V, T> reverse();
-
-    @CheckForNull
-    public abstract <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f);
-
-    protected abstract FingerTree<V, T> reverseAndMap(Function<T, T> f);
-
-    public FingerTree<V, T> takeUntil(Predicate<? super V> p) {
-        return split(p).a;
-    }
-
-    public FingerTree<V, T> dropUntil(Predicate<? super V> p) {
-        return split(p).b;
-    }
-
-    public Option<T> find(Predicate<? super V> p) {
-        if (this.isEmpty())
-            return Option.none();
-        return Option.some(split(p, getFactory().mempty()).pivot);
-    }
-
-    public Tuple2<FingerTree<V, T>, FingerTree<V, T>> split(Predicate<? super V> p) {
-        if (this.isEmpty())
-            return Tuple2.of(this, this);
-
-        val split = split(p, getFactory().mempty());
-
-        if (p.apply(measure()))
-            return Tuple2.of(split.left, split.right.prepend(split.pivot));
-        return Tuple2.of(this, getFactory().emptyTree);
-    }
-
-    public abstract ViewL<V, T> viewL();
-
-    public abstract ViewR<V, T> viewR();
-
-    protected FingerTree<V, T> unwrap() {
-        return this;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this)
-            return true;
-        if (obj == null || !(obj instanceof FingerTree))
-            return false;
-        FingerTree<?, ?> other = (FingerTree<?, ?>) obj;
-        return elementsEqual(other);
-    }
-
-    @Override
-    public abstract int hashCode();
-
-    public abstract boolean elementsEqual(FingerTree<?, ?> other);
-
-    @Override
-    public String toString() {
-        return Iterables.toString(this);
-    }
-
-    public String printToString() {
-        return print(ToStringPrinter.instance());
-    }
-
-    public String print(Printer<? super T> printer) {
-        StringBuilder sb = new StringBuilder();
-        print(sb, printer);
-        return sb.toString();
-    }
-
-    public void print(StringBuilder sb, Printer<? super T> printer) {
-        print(sb, "", printer);
-    }
-
-    protected abstract void print(StringBuilder sb, String padding, Printer<? super T> printer);
-
+    /**
+     * Appends string representations of elements to StringBuilder objects.
+     * 
+     * @param <T>
+     *            element type
+     */
     public static interface Printer<T> {
         void print(StringBuilder sb, String padding, T value);
-    }
-
-    static class ToStringPrinter<T> implements Printer<T> {
-
-        public static final ToStringPrinter<?> INSTANCE = new ToStringPrinter<Object>();
-
-        @SuppressWarnings("unchecked")
-        public static <T> Printer<T> instance() {
-            return (Printer<T>) INSTANCE;
-        }
-
-        @Override
-        public void print(StringBuilder sb, String padding, T value) {
-            sb.append(value);
-        }
-
     }
 
     @Value
@@ -303,6 +182,310 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
             }
 
         }
+    }
+
+    /**
+     * Appends an element to this tree.
+     * 
+     * @param value
+     *            element
+     * @return new finger tree
+     */
+    public abstract FingerTree<V, T> append(T value);
+
+    /**
+     * Prepends an element to this tree.
+     * 
+     * @param value
+     *            element
+     * @return new finger tree
+     */
+    public abstract FingerTree<V, T> prepend(T value);
+
+    /**
+     * Concatenates this tree and the given tree.
+     * 
+     * @param tree
+     *            other finger tree
+     * @return concatenated finger tree
+     */
+    public abstract FingerTree<V, T> concat(FingerTree<V, T> tree);
+
+    /**
+     * Concatenates this tree, the given element and the given tree.
+     * 
+     * @param a
+     *            element
+     * @param tree
+     *            other finger tree
+     * @return concatenated finger tree
+     */
+    public abstract FingerTree<V, T> concat(T a, FingerTree<V, T> tree);
+
+    /**
+     * Concatenates this tree, the given elements and the given tree.
+     * 
+     * @param a
+     *            element
+     * @param b
+     *            element
+     * @param tree
+     *            other finger tree
+     * @return concatenated finger tree
+     */
+    public abstract FingerTree<V, T> concat(T a, T b, FingerTree<V, T> tree);
+
+    /**
+     * Concatenates this tree, the given elements and the given tree.
+     * 
+     * @param a
+     *            element
+     * @param b
+     *            element
+     * @param c
+     *            element
+     * @param tree
+     *            other finger tree
+     * @return concatenated finger tree
+     */
+    public abstract FingerTree<V, T> concat(T a, T b, T c, FingerTree<V, T> tree);
+
+    /**
+     * Concatenates this tree, the given elements and the given tree.
+     * 
+     * @param a
+     *            element
+     * @param b
+     *            element
+     * @param c
+     *            element
+     * @param d
+     *            element
+     * @param tree
+     *            other finger tree
+     * @return concatenated finger tree
+     */
+    public abstract FingerTree<V, T> concat(T a, T b, T c, T d, FingerTree<V, T> tree);
+
+    /**
+     * Returns the measure of this tree.
+     * 
+     * @return measure
+     */
+    public abstract V measure();
+
+    /**
+     * Checks it this tree is empty.
+     * 
+     * @return true if empty, false otherwise
+     */
+    public abstract boolean isEmpty();
+
+    /**
+     * Transforms all elements in this tree with the given function. The given factory is used for constructing the
+     * resulting tree.
+     * 
+     * @param factory
+     *            result tree factory
+     * @param f
+     *            mapper function
+     * @return transformed finger tree
+     */
+    public abstract <U, O> FingerTree<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f);
+
+    /**
+     * Returns the first element of this tree if it exists.
+     * 
+     * @return Some(element) if this tree is not empty, None otherwise
+     */
+    public abstract Option<T> getHead();
+
+    /**
+     * Returns the last element of this tree if it exists.
+     * 
+     * @return Some(element) if this tree is not empty, None otherwise
+     */
+    public abstract Option<T> getLast();
+
+    /**
+     * Returns an iterator that iterates this tree in reverse order (e.g. last to first).
+     * 
+     * @return reverse iterator
+     */
+    public abstract Iterator<T> reverseIterator();
+
+    public abstract Split<V, T> split(Predicate<? super V> p, V accum);
+
+    public Tuple2<FingerTree<V, T>, FingerTree<V, T>> split(Predicate<? super V> p) {
+        if (this.isEmpty())
+            return Tuple2.of(this, this);
+
+        val split = split(p, getFactory().mempty());
+
+        if (p.apply(measure()))
+            return Tuple2.of(split.left, split.right.prepend(split.pivot));
+        return Tuple2.of(this, getFactory().emptyTree);
+    }
+
+    /**
+     * Returns the size of this tree.
+     * 
+     * @return size
+     */
+    public abstract int getSize();
+
+    /**
+     * Returns the factory that created this tree.
+     * 
+     * @return factory
+     */
+    public abstract FingerTreeFactory<V, T> getFactory();
+
+    /**
+     * Returns this tree with elements in reverse order.
+     * 
+     * @return reversed tree
+     */
+    public abstract FingerTree<V, T> reverse();
+
+    @CheckForNull
+    public abstract <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f);
+
+    /**
+     * Returns a tree which contains the left sequence of elements that pass the predicate.
+     * 
+     * @param p
+     *            predicate
+     * @return new finger tree
+     */
+    public FingerTree<V, T> takeUntil(Predicate<? super V> p) {
+        return split(p).a;
+    }
+
+    /**
+     * Returns a tree which contains the left sequence of elements that pass the predicate.
+     * 
+     * @param p
+     *            predicate
+     * @return new finger tree
+     */
+    public FingerTree<V, T> dropUntil(Predicate<? super V> p) {
+        return split(p).b;
+    }
+
+    /**
+     * Finds the first element that passes the given predicate.
+     * 
+     * @param p
+     *            predicate
+     * @return Some(element) if an element passed the predicate, None otherwise
+     */
+    public Option<T> find(Predicate<? super V> p) {
+        if (this.isEmpty())
+            return Option.none();
+        return Option.some(split(p, getFactory().mempty()).pivot);
+    }
+
+    /**
+     * Returns a lazy view of this tree.
+     * 
+     * @return lazy left view
+     */
+    public abstract ViewL<V, T> viewL();
+
+    /**
+     * Returns a lazy view of this tree.
+     * 
+     * @return lazy right view
+     */
+    public abstract ViewR<V, T> viewR();
+
+    /**
+     * Checks if all elements of this tree are equal to the elements in the given tree.
+     * 
+     * @param other
+     *            other finger tree
+     * @return true if elements were equal, false otherwise
+     */
+    public abstract boolean elementsEqual(FingerTree<?, ?> other);
+
+    /**
+     * Prints the internal structure of the tree using the elements' toString() method.
+     * 
+     * @return structure string
+     */
+    public String printToString() {
+        return print(ToStringPrinter.instance());
+    }
+
+    /**
+     * Prints the internal structure of the tree using the given printer.
+     * 
+     * @param printer
+     *            element printer
+     * @return structure string
+     */
+    public String print(Printer<? super T> printer) {
+        StringBuilder sb = new StringBuilder();
+        print(sb, printer);
+        return sb.toString();
+    }
+
+    /**
+     * Prints the internal structure of the tree to the string builder by using the elements' toString() method.
+     * 
+     * @param sb
+     *            string builder
+     * @param printer
+     *            element printer
+     */
+    public void print(StringBuilder sb, Printer<? super T> printer) {
+        print(sb, "", printer);
+    }
+
+    protected FingerTree<V, T> unwrap() {
+        return this;
+    }
+
+    protected abstract FingerTree<V, T> reverseAndMap(Function<T, T> f);
+
+    protected abstract void print(StringBuilder sb, String padding, Printer<? super T> printer);
+
+    static class ToStringPrinter<T> implements Printer<T> {
+
+        public static final ToStringPrinter<?> INSTANCE = new ToStringPrinter<Object>();
+
+        @SuppressWarnings("unchecked")
+        public static <T> Printer<T> instance() {
+            return (Printer<T>) INSTANCE;
+        }
+
+        @Override
+        public void print(StringBuilder sb, String padding, T value) {
+            sb.append(value);
+        }
+
+    }
+
+    private FingerTree() {
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+        if (obj == null || !(obj instanceof FingerTree))
+            return false;
+        FingerTree<?, ?> other = (FingerTree<?, ?>) obj;
+        return elementsEqual(other);
+    }
+
+    @Override
+    public abstract int hashCode();
+
+    @Override
+    public String toString() {
+        return Iterables.toString(this);
     }
 
     @RequiredArgsConstructor

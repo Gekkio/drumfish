@@ -20,46 +20,98 @@ import fi.gekkio.drumfish.lang.Monoid;
 public final class FingerTreeFactory<V, T> implements Serializable {
     private static final long serialVersionUID = -3600209950347929148L;
 
+    /**
+     * Creates a new factory that uses the given monoid and measurement function.
+     * 
+     * @param monoid
+     *            monoid
+     * @param measurement
+     *            measurement function
+     * @return factory
+     */
+    public static <V, T> FingerTreeFactory<V, T> create(Monoid<V> monoid, Function<? super T, V> measurement) {
+        return new FingerTreeFactory<V, T>(monoid, measurement);
+    }
+
     @Getter
     private final Monoid<V> monoid;
     @Getter
     private final Function<? super T, V> measurement;
 
-    public static <V, T> FingerTreeFactory<V, T> create(Monoid<V> monoid, Function<? super T, V> measurement) {
-        return new FingerTreeFactory<V, T>(monoid, measurement);
-    }
-
     final FingerTree<V, T> emptyTree = new EmptyTree();
-
     private volatile FingerTreeFactory<V, FingerTreeNode<V, T>> nodeFactory;
 
-    private static final class FtNodeMeasurement<V, T> implements Function<FingerTreeNode<V, T>, V>, Serializable {
-        private static final long serialVersionUID = -372309629884383219L;
-
-        private static final FtNodeMeasurement<?, ?> INSTANCE = new FtNodeMeasurement<Object, Object>();
-
-        @SuppressWarnings("unchecked")
-        public static <V, T> FtNodeMeasurement<V, T> instance() {
-            return (FtNodeMeasurement<V, T>) INSTANCE;
-        }
-
-        @Override
-        public V apply(FingerTreeNode<V, T> input) {
-            return input.measure();
-        }
-
-        private Object readResolve() throws ObjectStreamException {
-            return INSTANCE;
-        }
+    /**
+     * Returns an empty finger tree.
+     * 
+     * @return finger tree
+     */
+    public FingerTree<V, T> tree() {
+        return emptyTree;
     }
 
-    private final class EmptyTree extends Empty<V, T> implements Serializable {
-        private static final long serialVersionUID = -6437051207514239436L;
+    /**
+     * Returns a finger tree containing the given element.
+     * 
+     * @param a
+     *            element
+     * @return finger tree
+     */
+    public FingerTree<V, T> tree(T a) {
+        Preconditions.checkNotNull(a, "element cannot be null");
+        return new Single<V, T>(this, a);
+    }
 
-        @Override
-        public FingerTreeFactory<V, T> getFactory() {
-            return FingerTreeFactory.this;
+    /**
+     * Returns a finger tree containing the given elements.
+     * 
+     * @param elements
+     *            elements
+     * @return finger tree
+     */
+    public FingerTree<V, T> tree(T... elements) {
+        FingerTree<V, T> tree = emptyTree;
+        for (T a : elements) {
+            tree = tree.append(a);
         }
+        return tree;
+    }
+
+    /**
+     * Returns a finger tree containing the given elements.
+     * 
+     * @param elements
+     *            elements
+     * @return finger tree
+     */
+    public FingerTree<V, T> tree(Iterable<T> elements) {
+        FingerTree<V, T> tree = emptyTree;
+        for (T a : elements) {
+            tree = tree.append(a);
+        }
+        return tree;
+    }
+
+    /**
+     * Downcasts this factory.
+     * 
+     * @return factory
+     */
+    @SuppressWarnings("unchecked")
+    public <O extends T> FingerTreeFactory<V, O> cast() {
+        return (FingerTreeFactory<V, O>) this;
+    }
+
+    /**
+     * Downcasts this factory.
+     * 
+     * @param clazz
+     *            element class (for convenience only)
+     * @return factory
+     */
+    @SuppressWarnings("unchecked")
+    public <O extends T> FingerTreeFactory<V, O> cast(Class<O> clazz) {
+        return (FingerTreeFactory<V, O>) this;
     }
 
     FingerTreeFactory<V, FingerTreeNode<V, T>> nodeFactory() {
@@ -183,39 +235,33 @@ public final class FingerTreeFactory<V, T> implements Serializable {
         return new Node3<V, T>(measure(a, b, c), a, b, c);
     }
 
-    public FingerTree<V, T> tree() {
-        return emptyTree;
-    }
+    private static final class FtNodeMeasurement<V, T> implements Function<FingerTreeNode<V, T>, V>, Serializable {
+        private static final long serialVersionUID = -372309629884383219L;
 
-    public FingerTree<V, T> tree(T a) {
-        Preconditions.checkNotNull(a, "element cannot be null");
-        return new Single<V, T>(this, a);
-    }
+        private static final FtNodeMeasurement<?, ?> INSTANCE = new FtNodeMeasurement<Object, Object>();
 
-    public FingerTree<V, T> tree(T... elements) {
-        FingerTree<V, T> tree = emptyTree;
-        for (T a : elements) {
-            tree = tree.append(a);
+        @SuppressWarnings("unchecked")
+        public static <V, T> FtNodeMeasurement<V, T> instance() {
+            return (FtNodeMeasurement<V, T>) INSTANCE;
         }
-        return tree;
-    }
 
-    public FingerTree<V, T> tree(Iterable<T> elements) {
-        FingerTree<V, T> tree = emptyTree;
-        for (T a : elements) {
-            tree = tree.append(a);
+        @Override
+        public V apply(FingerTreeNode<V, T> input) {
+            return input.measure();
         }
-        return tree;
+
+        private Object readResolve() throws ObjectStreamException {
+            return INSTANCE;
+        }
     }
 
-    @SuppressWarnings("unchecked")
-    public <O extends T> FingerTreeFactory<V, O> cast() {
-        return (FingerTreeFactory<V, O>) this;
-    }
+    private final class EmptyTree extends Empty<V, T> implements Serializable {
+        private static final long serialVersionUID = -6437051207514239436L;
 
-    @SuppressWarnings("unchecked")
-    public <O extends T> FingerTreeFactory<V, O> cast(Class<O> clazz) {
-        return (FingerTreeFactory<V, O>) this;
+        @Override
+        public FingerTreeFactory<V, T> getFactory() {
+            return FingerTreeFactory.this;
+        }
     }
 
 }
