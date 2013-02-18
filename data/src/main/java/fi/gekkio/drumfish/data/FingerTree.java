@@ -17,6 +17,7 @@ import lombok.val;
 import lombok.experimental.Value;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
@@ -289,11 +290,13 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         public FingerTree<V, T> prepend(T value) {
+            Preconditions.checkNotNull(value, "value cannot be null");
             return getFactory().tree(value);
         }
 
         @Override
         public FingerTree<V, T> append(T value) {
+            Preconditions.checkNotNull(value, "value cannot be null");
             return getFactory().tree(value);
         }
 
@@ -400,6 +403,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         public FingerTree<V, T> prepend(T value) {
+            Preconditions.checkNotNull(value, "value cannot be null");
             val left = digit(value);
             val middle = factory.nodeFactory().emptyTree;
             val right = digit(a);
@@ -409,6 +413,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         public FingerTree<V, T> append(T value) {
+            Preconditions.checkNotNull(value, "value cannot be null");
             val left = digit(a);
             val middle = factory.nodeFactory().emptyTree;
             val right = digit(value);
@@ -537,6 +542,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         public FingerTree<V, T> prepend(T value) {
+            Preconditions.checkNotNull(value, "value cannot be null");
             if (left instanceof Digit4) {
                 val left = digit(value, this.left.getHead());
                 val middle = this.middle.prepend(this.left.toTailNode(factory));
@@ -548,6 +554,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         public FingerTree<V, T> append(T value) {
+            Preconditions.checkNotNull(value, "value cannot be null");
             if (right instanceof Digit4) {
                 val middle = this.middle.append(this.right.toInitNode(factory));
                 val right = digit(this.right.getLast(), value);
@@ -808,6 +815,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
                 return append(a);
             if (tree instanceof Single)
                 return append(a).append(((Single<V, T>) tree).a);
+            Preconditions.checkNotNull(a, "a cannot be null");
             Deep<V, T> other = (Deep<V, T>) tree;
             val m1 = middle;
             val d1 = right;
@@ -887,6 +895,8 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
                 return append(a).append(b);
             if (tree instanceof Single)
                 return append(a).append(b).append(((Single<V, T>) tree).a);
+            Preconditions.checkNotNull(a, "a cannot be null");
+            Preconditions.checkNotNull(b, "b cannot be null");
             Deep<V, T> other = (Deep<V, T>) tree;
             val m1 = middle;
             val d1 = right;
@@ -966,6 +976,9 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
                 return append(a).append(b).append(c);
             if (tree instanceof Single)
                 return append(a).append(b).append(c).append(((Single<V, T>) tree).a);
+            Preconditions.checkNotNull(a, "a cannot be null");
+            Preconditions.checkNotNull(b, "b cannot be null");
+            Preconditions.checkNotNull(c, "c cannot be null");
             Deep<V, T> other = (Deep<V, T>) tree;
             val m1 = middle;
             val d1 = right;
@@ -1045,6 +1058,10 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
                 return append(a).append(b).append(c).append(d);
             if (tree instanceof Single)
                 return append(a).append(b).append(c).append(d).append(((Single<V, T>) tree).a);
+            Preconditions.checkNotNull(a, "a cannot be null");
+            Preconditions.checkNotNull(b, "b cannot be null");
+            Preconditions.checkNotNull(c, "c cannot be null");
+            Preconditions.checkNotNull(d, "d cannot be null");
             Deep<V, T> other = (Deep<V, T>) tree;
             val m1 = middle;
             val d1 = right;

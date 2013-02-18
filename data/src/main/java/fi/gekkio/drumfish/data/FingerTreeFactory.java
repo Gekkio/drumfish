@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 
 import fi.gekkio.drumfish.data.FingerTree.Deep;
 import fi.gekkio.drumfish.data.FingerTree.Empty;
@@ -187,6 +188,7 @@ public final class FingerTreeFactory<V, T> implements Serializable {
     }
 
     public FingerTree<V, T> tree(T a) {
+        Preconditions.checkNotNull(a, "element cannot be null");
         return new Single<V, T>(this, a);
     }
 
