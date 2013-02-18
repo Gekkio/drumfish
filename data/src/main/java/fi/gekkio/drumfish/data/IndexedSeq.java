@@ -1,5 +1,6 @@
 package fi.gekkio.drumfish.data;
 
+import java.io.Serializable;
 import java.util.Iterator;
 
 import lombok.val;
@@ -11,7 +12,9 @@ import com.google.common.base.Predicate;
 
 import fi.gekkio.drumfish.lang.Monoids;
 
-public class IndexedSeq<T> implements Iterable<T> {
+public class IndexedSeq<T> implements Iterable<T>, Serializable {
+
+    private static final long serialVersionUID = -1323354912381469298L;
 
     private static final FingerTreeFactory<Integer, Object> FACTORY = new FingerTreeFactory<Integer, Object>(Monoids.integerSum(), Functions.constant(1));
 
