@@ -380,11 +380,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
      *            predicate
      * @return Some(element) if an element passed the predicate, None otherwise
      */
-    public Option<T> find(Predicate<? super V> p) {
-        if (this.isEmpty())
-            return Option.none();
-        return Option.some(split(p, getFactory().mempty()).pivot);
-    }
+    public abstract Option<T> find(Predicate<? super V> p);
 
     /**
      * Returns a lazy view of this tree.
@@ -614,6 +610,11 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         public <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f) {
             return initial;
         }
+
+        @Override
+        public Option<T> find(Predicate<? super V> p) {
+            return Option.none();
+        }
     }
 
     @RequiredArgsConstructor
@@ -767,6 +768,13 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         @CheckForNull
         public <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f) {
             return f.apply(initial, a);
+        }
+
+        @Override
+        public Option<T> find(Predicate<? super V> p) {
+            if (p.apply(factory.measure(a)))
+                return Option.some(a);
+            return Option.none();
         }
 
     }
@@ -1434,6 +1442,22 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
             return accum;
         }
 
+        @Override
+        public Option<T> find(Predicate<? super V> p) {
+            if (p.apply(left.measure(factory)))
+                return left.find(factory, p);
+            if (p.apply(middle.measure())) {
+                for (FingerTreeNode<V, T> node : middle.find(p)) {
+                    return node.find(factory, p);
+                }
+                return Option.none();
+            }
+            if (p.apply(right.measure(factory))) {
+                return right.find(factory, p);
+            }
+            return Option.none();
+        }
+
     }
 
     @RequiredArgsConstructor
@@ -1603,6 +1627,11 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         @CheckForNull
         public <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f) {
             return unwrap().foldLeft(initial, f);
+        }
+
+        @Override
+        public Option<T> find(Predicate<? super V> p) {
+            return unwrap().find(p);
         }
 
     }

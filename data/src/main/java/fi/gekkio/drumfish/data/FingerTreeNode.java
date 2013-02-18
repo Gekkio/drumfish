@@ -20,6 +20,7 @@ import fi.gekkio.drumfish.data.FingerTree.Printer;
 import fi.gekkio.drumfish.data.FingerTreeDigit.DigitSplit;
 import fi.gekkio.drumfish.lang.Function2;
 import fi.gekkio.drumfish.lang.LeftFold;
+import fi.gekkio.drumfish.lang.Option;
 
 abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
     private static final long serialVersionUID = -9130857121651032905L;
@@ -44,6 +45,8 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
     public abstract FingerTreeNode<V, T> reverseAndMap(FingerTreeFactory<V, T> factory, Function<T, T> f);
 
     public abstract <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f);
+
+    public abstract Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p);
 
     @RequiredArgsConstructor
     @EqualsAndHashCode(callSuper = false, exclude = "measure")
@@ -120,6 +123,15 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
             accum = f.apply(accum, a);
             accum = f.apply(accum, b);
             return accum;
+        }
+
+        @Override
+        public Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p) {
+            if (p.apply(factory.measure(a)))
+                return Option.some(a);
+            if (p.apply(factory.measure(b)))
+                return Option.some(b);
+            return Option.none();
         }
 
     }
@@ -209,6 +221,17 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
             accum = f.apply(accum, b);
             accum = f.apply(accum, c);
             return accum;
+        }
+
+        @Override
+        public Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p) {
+            if (p.apply(factory.measure(a)))
+                return Option.some(a);
+            if (p.apply(factory.measure(b)))
+                return Option.some(b);
+            if (p.apply(factory.measure(c)))
+                return Option.some(c);
+            return Option.none();
         }
 
     }

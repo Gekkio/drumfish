@@ -17,6 +17,7 @@ import com.google.common.collect.Iterators;
 
 import fi.gekkio.drumfish.data.FingerTree.Printer;
 import fi.gekkio.drumfish.lang.Function2;
+import fi.gekkio.drumfish.lang.Option;
 
 abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
     private static final long serialVersionUID = 751532813120711150L;
@@ -57,6 +58,8 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
     public abstract FingerTreeDigit<T> reverseAndMap(Function<T, T> f);
 
     public abstract <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f);
+
+    public abstract <V> Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p);
 
     @Value
     static class DigitSplit<T> implements Serializable {
@@ -189,6 +192,13 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
             return accum;
         }
 
+        @Override
+        public <V> Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p) {
+            if (p.apply(factory.measure(a)))
+                return Option.some(a);
+            return Option.none();
+        }
+
     }
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -305,6 +315,15 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
             accum = f.apply(accum, a);
             accum = f.apply(accum, b);
             return accum;
+        }
+
+        @Override
+        public <V> Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p) {
+            if (p.apply(factory.measure(a)))
+                return Option.some(a);
+            if (p.apply(factory.measure(b)))
+                return Option.some(b);
+            return Option.none();
         }
 
     }
@@ -433,6 +452,17 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
             accum = f.apply(accum, b);
             accum = f.apply(accum, c);
             return accum;
+        }
+
+        @Override
+        public <V> Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p) {
+            if (p.apply(factory.measure(a)))
+                return Option.some(a);
+            if (p.apply(factory.measure(b)))
+                return Option.some(b);
+            if (p.apply(factory.measure(c)))
+                return Option.some(c);
+            return Option.none();
         }
     }
 
@@ -570,6 +600,19 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
             accum = f.apply(accum, c);
             accum = f.apply(accum, d);
             return accum;
+        }
+
+        @Override
+        public <V> Option<T> find(FingerTreeFactory<V, T> factory, Predicate<? super V> p) {
+            if (p.apply(factory.measure(a)))
+                return Option.some(a);
+            if (p.apply(factory.measure(b)))
+                return Option.some(b);
+            if (p.apply(factory.measure(c)))
+                return Option.some(c);
+            if (p.apply(factory.measure(d)))
+                return Option.some(d);
+            return Option.none();
         }
     }
 
