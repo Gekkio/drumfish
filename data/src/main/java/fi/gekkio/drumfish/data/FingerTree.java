@@ -69,12 +69,14 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
     protected abstract FingerTreeFactory<V, T> getFactory();
 
     public Tuple2<FingerTree<V, T>, FingerTree<V, T>> split(Predicate<? super V> p) {
-        if (this.isEmpty() || !p.apply(measure()))
+        if (this.isEmpty())
             return Tuple2.of(this, this);
 
         val split = split(p, getFactory().mempty());
 
-        return Tuple2.of(split.left, split.right.prepend(split.pivot));
+        if (p.apply(measure()))
+            return Tuple2.of(split.left, split.right.prepend(split.pivot));
+        return Tuple2.of(this, getFactory().emptyTree);
     }
 
     public abstract ViewL<V, T> viewL();
