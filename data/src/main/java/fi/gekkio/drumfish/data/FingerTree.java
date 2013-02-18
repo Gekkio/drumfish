@@ -307,6 +307,10 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
      */
     public abstract Option<T> getLast();
 
+    public abstract T getHeadUnsafe();
+
+    public abstract T getLastUnsafe();
+
     /**
      * Returns an iterator that iterates this tree in reverse order (e.g. last to first).
      * 
@@ -316,16 +320,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
     public abstract Split<V, T> split(Predicate<? super V> p, V accum);
 
-    public Tuple2<FingerTree<V, T>, FingerTree<V, T>> split(Predicate<? super V> p) {
-        if (this.isEmpty())
-            return Tuple2.of(this, this);
-
-        val split = split(p, getFactory().mempty());
-
-        if (p.apply(measure()))
-            return Tuple2.of(split.left, split.right.prepend(split.pivot));
-        return Tuple2.of(this, getFactory().emptyTree);
-    }
+    public abstract Tuple2<FingerTree<V, T>, FingerTree<V, T>> split(Predicate<? super V> p);
 
     /**
      * Returns the size of this tree.
@@ -536,8 +531,23 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         }
 
         @Override
+        public T getHeadUnsafe() {
+            throw new UnsupportedOperationException("Cannot get the head from an empty tree");
+        }
+
+        @Override
+        public T getLastUnsafe() {
+            throw new UnsupportedOperationException("Cannot get the last element from an empty tree");
+        }
+
+        @Override
         public Split<V, T> split(Predicate<? super V> p, V accum) {
             throw new UnsupportedOperationException("Cannot split an empty finger tree");
+        }
+
+        @Override
+        public Tuple2<FingerTree<V, T>, FingerTree<V, T>> split(Predicate<? super V> p) {
+            return Tuple2.of(getFactory().emptyTree, getFactory().emptyTree);
         }
 
         @Override
@@ -681,8 +691,25 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         }
 
         @Override
+        public T getHeadUnsafe() {
+            return a;
+        }
+
+        @Override
+        public T getLastUnsafe() {
+            return a;
+        }
+
+        @Override
         public Split<V, T> split(Predicate<? super V> p, V accum) {
             return new Split<V, T>(factory.emptyTree, a, factory.emptyTree);
+        }
+
+        @Override
+        public Tuple2<FingerTree<V, T>, FingerTree<V, T>> split(Predicate<? super V> p) {
+            if (p.apply(factory.measure(a)))
+                return Tuple2.of(factory.emptyTree, factory.tree(a));
+            return Tuple2.of(factory.tree(a), factory.emptyTree);
         }
 
         @Override
@@ -790,7 +817,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         private final FingerTree<V, FingerTreeNode<V, T>> middle;
         private final FingerTreeDigit<T> right;
 
-        private int hashCode;
+        private transient int hashCode;
 
         @Override
         public boolean isEmpty() {
@@ -852,6 +879,16 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         }
 
         @Override
+        public T getHeadUnsafe() {
+            return left.getHead();
+        }
+
+        @Override
+        public T getLastUnsafe() {
+            return right.getLast();
+        }
+
+        @Override
         public Split<V, T> split(Predicate<? super V> p, V accum) {
             FingerTree<V, T> left;
             T pivot;
@@ -890,7 +927,16 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
             return new Split<V, T>(left, pivot, right);
         }
 
-        protected FingerTree<V, T> deepL(@Nullable FingerTreeDigit<T> left, FingerTree<V, FingerTreeNode<V, T>> center, FingerTreeDigit<T> right) {
+        public Tuple2<FingerTree<V, T>, FingerTree<V, T>> split(Predicate<? super V> p) {
+            if (!p.apply(measure()))
+                return Tuple2.<FingerTree<V, T>, FingerTree<V, T>> of(this, factory.emptyTree);
+
+            val split = split(p, getFactory().mempty());
+
+            return Tuple2.of(split.left, split.right.prepend(split.pivot));
+        }
+
+        protected FingerTree<V, T> deepL(FingerTreeDigit<T> left, FingerTree<V, FingerTreeNode<V, T>> center, FingerTreeDigit<T> right) {
             if (left != null)
                 return factory.deep(left, center, right);
             val cView = center.viewL();
@@ -914,32 +960,116 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
                 private static final long serialVersionUID = -7520792642423138663L;
 
                 @Override
+                public boolean isEmpty() {
+                    return false;
+                }
+
+                @Override
+                public Option<T> getHead() {
+                    Deep<V, T> me = Deep.this;
+                    return Option.some(me.left.getTail().getHead());
+                }
+
+                @Override
+                public T getHeadUnsafe() {
+                    Deep<V, T> me = Deep.this;
+                    return me.left.getTail().getHead();
+                }
+
+                @Override
+                public Option<T> getLast() {
+                    Deep<V, T> me = Deep.this;
+                    return Option.some(me.right.getLast());
+                }
+
+                @Override
+                public T getLastUnsafe() {
+                    Deep<V, T> me = Deep.this;
+                    return me.right.getLast();
+                }
+
+                @Override
                 protected FingerTree<V, T> constructTree() {
                     Deep<V, T> me = Deep.this;
-                    if (me.left instanceof Digit1) {
-                        return me.rotateLeft();
-                    }
                     return me.factory.deep(me.left.getTail(), me.middle, me.right);
                 }
+
             }
-            return new ViewL.FullL<V, T>(left.getHead(), new ViewLTree());
+            class ViewLTreeRotate extends LazyTree<V, T> {
+                private static final long serialVersionUID = 3271655120045995047L;
+
+                @Override
+                public boolean isEmpty() {
+                    return false;
+                }
+
+                @Override
+                protected FingerTree<V, T> constructTree() {
+                    Deep<V, T> me = Deep.this;
+                    return me.rotateLeft();
+                }
+
+            }
+            return new ViewL.FullL<V, T>(left.getHead(), (left instanceof Digit1) ? (new ViewLTreeRotate()) : new ViewLTree());
         }
 
         @Override
         public ViewR<V, T> viewR() {
             class ViewRTree extends LazyTree<V, T> {
-                private static final long serialVersionUID = 5263935514395804782L;
+                private static final long serialVersionUID = 2682626635226309229L;
+
+                @Override
+                public boolean isEmpty() {
+                    return false;
+                }
+
+                @Override
+                public Option<T> getHead() {
+                    Deep<V, T> me = Deep.this;
+                    return Option.some(me.left.getHead());
+                }
+
+                @Override
+                public T getHeadUnsafe() {
+                    Deep<V, T> me = Deep.this;
+                    return me.left.getHead();
+                }
+
+                @Override
+                public Option<T> getLast() {
+                    Deep<V, T> me = Deep.this;
+                    return Option.some(me.right.getInit().getLast());
+                }
+
+                @Override
+                public T getLastUnsafe() {
+                    Deep<V, T> me = Deep.this;
+                    return me.right.getLast();
+                }
 
                 @Override
                 protected FingerTree<V, T> constructTree() {
                     Deep<V, T> me = Deep.this;
-                    if (me.right instanceof Digit1) {
-                        return me.rotateRight();
-                    }
                     return me.factory.deep(me.left, me.middle, me.right.getInit());
                 }
+
             }
-            return new ViewR.FullR<V, T>(new ViewRTree(), right.getLast());
+            class ViewRTreeRotate extends LazyTree<V, T> {
+                private static final long serialVersionUID = -5170541811958183205L;
+
+                @Override
+                public boolean isEmpty() {
+                    return false;
+                }
+
+                @Override
+                protected FingerTree<V, T> constructTree() {
+                    Deep<V, T> me = Deep.this;
+                    return me.rotateRight();
+                }
+
+            }
+            return new ViewR.FullR<V, T>((right instanceof Digit1) ? (new ViewRTreeRotate()) : new ViewRTree(), right.getLast());
         }
 
         protected FingerTree<V, T> rotateLeft() {
@@ -1539,6 +1669,16 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         }
 
         @Override
+        public T getLastUnsafe() {
+            return unwrap().getLastUnsafe();
+        }
+
+        @Override
+        public T getHeadUnsafe() {
+            return unwrap().getHeadUnsafe();
+        }
+
+        @Override
         public Option<T> getLast() {
             return unwrap().getLast();
         }
@@ -1546,6 +1686,11 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         @Override
         public Split<V, T> split(Predicate<? super V> p, V accum) {
             return unwrap().split(p, accum);
+        }
+
+        @Override
+        public Tuple2<FingerTree<V, T>, FingerTree<V, T>> split(Predicate<? super V> p) {
+            return unwrap().split(p);
         }
 
         @Override
