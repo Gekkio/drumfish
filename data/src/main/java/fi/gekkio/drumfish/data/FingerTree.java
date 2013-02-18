@@ -25,8 +25,9 @@ import fi.gekkio.drumfish.data.FingerTreeDigit.Digit1;
 import fi.gekkio.drumfish.data.FingerTreeDigit.Digit2;
 import fi.gekkio.drumfish.data.FingerTreeDigit.Digit3;
 import fi.gekkio.drumfish.data.FingerTreeDigit.Digit4;
-import fi.gekkio.drumfish.data.FingerTreeNode.FtNodeIterator;
-import fi.gekkio.drumfish.data.FingerTreeNode.FtNodeMapper;
+import fi.gekkio.drumfish.data.FingerTreeNode.NodeIterator;
+import fi.gekkio.drumfish.data.FingerTreeNode.NodeMapper;
+import fi.gekkio.drumfish.data.FingerTreeNode.NodePrinter;
 import fi.gekkio.drumfish.lang.Option;
 import fi.gekkio.drumfish.lang.Tuple2;
 
@@ -54,19 +55,19 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
     public abstract boolean isEmpty();
 
-    public abstract <U, O> FingerTree<U, O> map(FingerTreeFactory<U, O> factory, Function<T, O> f);
+    public abstract <U, O> FingerTree<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f);
 
     public abstract Option<T> getHead();
 
     public abstract Option<T> getLast();
 
-    public abstract Split<V, T> split(Predicate<V> p, V accum);
+    public abstract Split<V, T> split(Predicate<? super V> p, V accum);
 
     public abstract int getSize();
 
     protected abstract FingerTreeFactory<V, T> getFactory();
 
-    public Tuple2<FingerTree<V, T>, FingerTree<V, T>> split(Predicate<V> p) {
+    public Tuple2<FingerTree<V, T>, FingerTree<V, T>> split(Predicate<? super V> p) {
         if (this.isEmpty() || !p.apply(measure()))
             return Tuple2.of(this, this);
 
@@ -302,7 +303,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <U, O> FingerTree<U, O> map(FingerTreeFactory<U, O> factory, Function<T, O> f) {
+        public <U, O> FingerTree<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f) {
             return factory.emptyTree;
         }
 
@@ -317,7 +318,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public Split<V, T> split(Predicate<V> p, V accum) {
+        public Split<V, T> split(Predicate<? super V> p, V accum) {
             throw new UnsupportedOperationException("Cannot split an empty finger tree");
         }
 
@@ -421,7 +422,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <U, O> FingerTree<U, O> map(FingerTreeFactory<U, O> factory, Function<T, O> f) {
+        public <U, O> FingerTree<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f) {
             return factory.tree(f.apply(a));
         }
 
@@ -436,7 +437,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public Split<V, T> split(Predicate<V> p, V accum) {
+        public Split<V, T> split(Predicate<? super V> p, V accum) {
             return new Split<V, T>(factory.emptyTree, a, factory.emptyTree);
         }
 
@@ -558,12 +559,12 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         public Iterator<T> iterator() {
-            return Iterators.concat(left.iterator(), new FtNodeIterator<V, T>(middle), right.iterator());
+            return Iterators.concat(left.iterator(), new NodeIterator<T>(middle), right.iterator());
         }
 
         @Override
-        public <U, O> FingerTree<U, O> map(FingerTreeFactory<U, O> factory, Function<T, O> f) {
-            return factory.deep(left.map(f), middle.map(factory.nodeFactory(), new FtNodeMapper<V, T, U, O>(factory, f)), right.map(f));
+        public <U, O> FingerTree<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f) {
+            return factory.deep(left.map(f), middle.map(factory.nodeFactory(), new NodeMapper<T, U, O>(factory, f)), right.map(f));
         }
 
         @Override
@@ -577,7 +578,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public Split<V, T> split(Predicate<V> p, V accum) {
+        public Split<V, T> split(Predicate<? super V> p, V accum) {
             FingerTree<V, T> left;
             T pivot;
             FingerTree<V, T> right;
@@ -693,12 +694,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
             sb.append(padding);
             sb.append(" M\n");
-            middle.print(sb, padding + "  ", new Printer<FingerTreeNode<V, T>>() {
-                @Override
-                public void print(StringBuilder sb, String padding, FingerTreeNode<V, T> value) {
-                    value.print(sb, padding, printer);
-                }
-            });
+            middle.print(sb, padding + "  ", new NodePrinter<T>(printer));
             sb.append('\n');
 
             sb.append(padding);
@@ -1192,7 +1188,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <U, O> FingerTree<U, O> map(FingerTreeFactory<U, O> factory, Function<T, O> f) {
+        public <U, O> FingerTree<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f) {
             return unwrap().map(factory, f);
         }
 
@@ -1207,7 +1203,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public Split<V, T> split(Predicate<V> p, V accum) {
+        public Split<V, T> split(Predicate<? super V> p, V accum) {
             return unwrap().split(p, accum);
         }
 

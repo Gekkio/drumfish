@@ -25,9 +25,9 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
 
     public abstract V measure();
 
-    public abstract <U, O> FingerTreeNode<U, O> map(FingerTreeFactory<U, O> factory, Function<T, O> f);
+    public abstract <U, O> FingerTreeNode<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f);
 
-    public abstract DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<V> p, V accum);
+    public abstract DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum);
 
     public abstract FingerTreeDigit<T> toDigit();
 
@@ -57,12 +57,12 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <U, O> FingerTreeNode<U, O> map(FingerTreeFactory<U, O> factory, Function<T, O> f) {
+        public <U, O> FingerTreeNode<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f) {
             return factory.node(f.apply(a), f.apply(b));
         }
 
         @Override
-        public DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<V> p, V accum) {
+        public DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
             V accumA = factory.mappend(accum, factory.measure(a));
             if (p.apply(accumA))
                 return new DigitSplit<T>(null, a, digit(b));
@@ -117,12 +117,12 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <U, O> FingerTreeNode<U, O> map(FingerTreeFactory<U, O> factory, Function<T, O> f) {
+        public <U, O> FingerTreeNode<U, O> map(FingerTreeFactory<U, O> factory, Function<? super T, O> f) {
             return factory.node(f.apply(a), f.apply(b), f.apply(c));
         }
 
         @Override
-        public DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<V> p, V accum) {
+        public DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
             V accumA = factory.mappend(accum, factory.measure(a));
             if (p.apply(accumA))
                 return new DigitSplit<T>(null, a, digit(b));
@@ -164,24 +164,24 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
     }
 
     @RequiredArgsConstructor
-    static final class FtNodeMapper<V, T, U, O> implements Function<FingerTreeNode<V, T>, FingerTreeNode<U, O>>, Serializable {
+    static final class NodeMapper<T, U, O> implements Function<FingerTreeNode<?, T>, FingerTreeNode<U, O>>, Serializable {
         private static final long serialVersionUID = 71975552025750738L;
 
         private final FingerTreeFactory<U, O> factory;
-        private final Function<T, O> f;
+        private final Function<? super T, O> f;
 
         @Override
-        public FingerTreeNode<U, O> apply(FingerTreeNode<V, T> input) {
+        public FingerTreeNode<U, O> apply(FingerTreeNode<?, T> input) {
             return input.map(factory, f);
         }
 
     }
 
     @RequiredArgsConstructor
-    static final class FtNodeIterator<V, T> extends UnmodifiableIterator<T> {
-        private final FingerTree<V, FingerTreeNode<V, T>> tree;
+    static final class NodeIterator<T> extends UnmodifiableIterator<T> {
+        private final FingerTree<?, ? extends FingerTreeNode<?, T>> tree;
 
-        private Iterator<FingerTreeNode<V, T>> node;
+        private Iterator<? extends FingerTreeNode<?, T>> node;
 
         private Iterator<T> inner;
 
@@ -199,6 +199,16 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
             if (inner == null || !inner.hasNext())
                 inner = node.next().iterator();
             return inner.next();
+        }
+    }
+
+    @RequiredArgsConstructor
+    static final class NodePrinter<T> implements Printer<FingerTreeNode<?, T>> {
+        private final Printer<? super T> printer;
+
+        @Override
+        public void print(StringBuilder sb, String padding, FingerTreeNode<?, T> value) {
+            value.print(sb, padding, printer);
         }
     }
 

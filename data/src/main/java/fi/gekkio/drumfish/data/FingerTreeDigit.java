@@ -29,7 +29,7 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
 
     public abstract <V> V measure(FingerTreeFactory<V, T> factory);
 
-    public abstract <O> FingerTreeDigit<O> map(Function<T, O> f);
+    public abstract <O> FingerTreeDigit<O> map(Function<? super T, O> f);
 
     public abstract T getHead();
 
@@ -39,7 +39,7 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
 
     public abstract T getLast();
 
-    public abstract <V> DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<V> p, V accum);
+    public abstract <V> DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum);
 
     public abstract <V> FingerTreeNode<V, T> toTailNode(FingerTreeFactory<V, T> factory);
 
@@ -97,7 +97,7 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <O> FingerTreeDigit<O> map(Function<T, O> f) {
+        public <O> FingerTreeDigit<O> map(Function<? super T, O> f) {
             return digit(f.apply(a));
         }
 
@@ -142,7 +142,7 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <V> DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<V> p, V accum) {
+        public <V> DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
             return new DigitSplit<T>(null, a, null);
         }
 
@@ -187,7 +187,7 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <O> FingerTreeDigit<O> map(Function<T, O> f) {
+        public <O> FingerTreeDigit<O> map(Function<? super T, O> f) {
             return digit(f.apply(a), f.apply(b));
         }
 
@@ -233,7 +233,7 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <V> DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<V> p, V accum) {
+        public <V> DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
             V accumA = factory.mappend(accum, factory.measure(a));
             if (p.apply(accumA))
                 return new DigitSplit<T>(null, a, digit(b));
@@ -287,7 +287,7 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <O> FingerTreeDigit<O> map(Function<T, O> f) {
+        public <O> FingerTreeDigit<O> map(Function<? super T, O> f) {
             return digit(f.apply(a), f.apply(b), f.apply(c));
         }
 
@@ -333,7 +333,7 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <V> DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<V> p, V accum) {
+        public <V> DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
             V accumA = factory.mappend(accum, factory.measure(a));
             if (p.apply(accumA))
                 return new DigitSplit<T>(null, a, digit(b, c));
@@ -396,7 +396,7 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <O> FingerTreeDigit<O> map(Function<T, O> f) {
+        public <O> FingerTreeDigit<O> map(Function<? super T, O> f) {
             return digit(f.apply(a), f.apply(b), f.apply(c), f.apply(d));
         }
 
@@ -442,7 +442,7 @@ abstract class FingerTreeDigit<T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public <V> DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<V> p, V accum) {
+        public <V> DigitSplit<T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
             V accumA = factory.mappend(accum, factory.measure(a));
             if (p.apply(accumA))
                 return new DigitSplit<T>(null, a, digit(b, c, d));
