@@ -1207,8 +1207,6 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         public FingerTree<V, T> concat(T a, FingerTree<V, T> tree) {
             if (tree instanceof LazyTree)
                 return concat(a, tree.unwrap());
-            if (!(tree instanceof Deep))
-                return append(a).concat(tree);
             if (tree instanceof Empty)
                 return append(a);
             if (tree instanceof Single)
