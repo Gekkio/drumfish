@@ -106,11 +106,6 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
         }
 
         @Override
-        public int getSize() {
-            return 2;
-        }
-
-        @Override
         public FingerTreeNode<V, T> reverseAndMap(FingerTreeFactory<V, T> factory, Function<T, T> f) {
             return factory.node(f.apply(b), f.apply(a));
         }
@@ -200,11 +195,6 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
             sb.append(padding);
             sb.append("\\+");
             printer.print(sb, padding + "  ", c);
-        }
-
-        @Override
-        public int getSize() {
-            return 3;
         }
 
         @Override

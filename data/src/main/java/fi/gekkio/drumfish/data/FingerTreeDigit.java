@@ -51,8 +51,6 @@ abstract class FingerTreeDigit<V, T> implements Iterable<T>, Serializable {
 
     public abstract void print(StringBuilder sb, String padding, Printer<? super T> printer);
 
-    public abstract int getSize();
-
     public abstract Iterator<T> reverseIterator();
 
     public abstract FingerTreeDigit<V, T> reverseAndMap(FingerTreeFactory<V, T> factory, Function<T, T> f);
@@ -158,11 +156,6 @@ abstract class FingerTreeDigit<V, T> implements Iterable<T>, Serializable {
             sb.append(padding);
             sb.append("\\-");
             printer.print(sb, padding + "  ", a);
-        }
-
-        @Override
-        public int getSize() {
-            return 1;
         }
 
         @Override
@@ -283,11 +276,6 @@ abstract class FingerTreeDigit<V, T> implements Iterable<T>, Serializable {
             sb.append(padding);
             sb.append("\\-");
             printer.print(sb, padding + "  ", b);
-        }
-
-        @Override
-        public int getSize() {
-            return 2;
         }
 
         @Override
@@ -420,11 +408,6 @@ abstract class FingerTreeDigit<V, T> implements Iterable<T>, Serializable {
             sb.append(padding);
             sb.append("\\-");
             printer.print(sb, padding + "  ", c);
-        }
-
-        @Override
-        public int getSize() {
-            return 3;
         }
 
         @Override
@@ -568,11 +551,6 @@ abstract class FingerTreeDigit<V, T> implements Iterable<T>, Serializable {
             sb.append(padding);
             sb.append("\\-");
             printer.print(sb, padding + "  ", d);
-        }
-
-        @Override
-        public int getSize() {
-            return 4;
         }
 
         @Override
