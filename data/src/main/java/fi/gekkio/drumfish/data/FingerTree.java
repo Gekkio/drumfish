@@ -25,6 +25,7 @@ import fi.gekkio.drumfish.data.FingerTreeDigit.Digit1;
 import fi.gekkio.drumfish.data.FingerTreeDigit.Digit2;
 import fi.gekkio.drumfish.data.FingerTreeDigit.Digit3;
 import fi.gekkio.drumfish.data.FingerTreeDigit.Digit4;
+import fi.gekkio.drumfish.data.FingerTreeNode.Node3;
 import fi.gekkio.drumfish.data.FingerTreeNode.NodeIterator;
 import fi.gekkio.drumfish.data.FingerTreeNode.NodeLeftFold;
 import fi.gekkio.drumfish.data.FingerTreeNode.NodeMapper;
@@ -278,6 +279,10 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
      * @return true if empty, false otherwise
      */
     public abstract boolean isEmpty();
+
+    public boolean isSingle() {
+        return false;
+    }
 
     /**
      * Transforms all elements in this tree with the given function. The given factory is used for constructing the
@@ -564,6 +569,8 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         public boolean elementsEqual(FingerTree<?, ?> other) {
+            if (other instanceof LazyTree)
+                return elementsEqual(other.unwrap());
             return other instanceof Empty;
         }
 
@@ -624,6 +631,11 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         @Override
         public boolean isEmpty() {
             return false;
+        }
+
+        @Override
+        public boolean isSingle() {
+            return true;
         }
 
         @Override
@@ -731,6 +743,8 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         public boolean elementsEqual(FingerTree<?, ?> other) {
             if (other == this)
                 return true;
+            if (other instanceof LazyTree)
+                return elementsEqual(other.unwrap());
             if (!(other instanceof Single))
                 return false;
             Single<?, ?> single = (Single<?, ?>) other;
@@ -826,6 +840,20 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         public FingerTree<V, T> append(T value) {
             Preconditions.checkNotNull(value, "value cannot be null");
             if (right instanceof Digit4) {
+                val dr = (Digit4<V, T>) right;
+                if (left instanceof Digit1) {
+                    val dl = (Digit1<V, T>) left;
+                    if (middle.isEmpty()) {
+                        return factory.deep(factory.digit(dl.a, dr.a, dr.b), factory.nodeFactory().emptyTree, factory.digit(dr.c, dr.d, value));
+                    } else if (middle.isSingle()) {
+                        val m = middle.getHeadUnsafe();
+                        if (m instanceof Node3) {
+                            val mn = (Node3<V, T>) m;
+                            return factory.deep(factory.digit(dl.a, mn.a, mn.b), factory.nodeFactory().tree(factory.node(mn.c, dr.a, dr.b)),
+                                    factory.digit(dr.c, dr.d, value));
+                        }
+                    }
+                }
                 val middle = this.middle.append(this.right.toInitNode(factory));
                 val right = factory.digit(this.right.getLast(), value);
                 return factory.deep(factory.mappend(measure, factory.measure(value)), left, middle, right);
@@ -1125,12 +1153,12 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         public FingerTree<V, T> concat(FingerTree<V, T> tree) {
+            if (tree.isEmpty())
+                return this;
+            if (tree.isSingle())
+                return append(tree.getHeadUnsafe());
             if (tree instanceof LazyTree)
                 return concat(tree.unwrap());
-            if (tree instanceof Empty)
-                return this;
-            if (tree instanceof Single)
-                return append(((Single<V, T>) tree).a);
             Deep<V, T> other = (Deep<V, T>) tree;
             val m1 = middle;
             val d1 = right;
@@ -1205,12 +1233,12 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         public FingerTree<V, T> concat(T a, FingerTree<V, T> tree) {
+            if (tree.isEmpty())
+                return append(a);
+            if (tree.isSingle())
+                return append(a).append(tree.getHeadUnsafe());
             if (tree instanceof LazyTree)
                 return concat(a, tree.unwrap());
-            if (tree instanceof Empty)
-                return append(a);
-            if (tree instanceof Single)
-                return append(a).append(((Single<V, T>) tree).a);
             Preconditions.checkNotNull(a, "a cannot be null");
             Deep<V, T> other = (Deep<V, T>) tree;
             val m1 = middle;
@@ -1285,12 +1313,12 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         public FingerTree<V, T> concat(T a, T b, FingerTree<V, T> tree) {
+            if (tree.isEmpty())
+                return append(a).append(b);
+            if (tree.isSingle())
+                return append(a).append(b).append(tree.getHeadUnsafe());
             if (tree instanceof LazyTree)
                 return concat(a, b, tree.unwrap());
-            if (tree instanceof Empty)
-                return append(a).append(b);
-            if (tree instanceof Single)
-                return append(a).append(b).append(((Single<V, T>) tree).a);
             Preconditions.checkNotNull(a, "a cannot be null");
             Preconditions.checkNotNull(b, "b cannot be null");
             Deep<V, T> other = (Deep<V, T>) tree;
@@ -1366,12 +1394,12 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         public FingerTree<V, T> concat(T a, T b, T c, FingerTree<V, T> tree) {
+            if (tree.isEmpty())
+                return append(a).append(b).append(c);
+            if (tree.isSingle())
+                return append(a).append(b).append(c).append(tree.getHeadUnsafe());
             if (tree instanceof LazyTree)
                 return concat(a, b, c, tree.unwrap());
-            if (tree instanceof Empty)
-                return append(a).append(b).append(c);
-            if (tree instanceof Single)
-                return append(a).append(b).append(c).append(((Single<V, T>) tree).a);
             Preconditions.checkNotNull(a, "a cannot be null");
             Preconditions.checkNotNull(b, "b cannot be null");
             Preconditions.checkNotNull(c, "c cannot be null");
@@ -1448,12 +1476,12 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
 
         @Override
         public FingerTree<V, T> concat(T a, T b, T c, T d, FingerTree<V, T> tree) {
+            if (tree.isEmpty())
+                return append(a).append(b).append(c).append(d);
+            if (tree.isSingle())
+                return append(a).append(b).append(c).append(d).append(tree.getHeadUnsafe());
             if (tree instanceof LazyTree)
                 return concat(a, b, c, d, tree.unwrap());
-            if (tree instanceof Empty)
-                return append(a).append(b).append(c).append(d);
-            if (tree instanceof Single)
-                return append(a).append(b).append(c).append(d).append(((Single<V, T>) tree).a);
             Preconditions.checkNotNull(a, "a cannot be null");
             Preconditions.checkNotNull(b, "b cannot be null");
             Preconditions.checkNotNull(c, "c cannot be null");
@@ -1533,16 +1561,10 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
         public boolean elementsEqual(FingerTree<?, ?> other) {
             if (other == this)
                 return true;
+            if (other instanceof LazyTree)
+                return elementsEqual(other.unwrap());
             if (!(other instanceof Deep))
                 return false;
-            Deep<?, ?> deep = (Deep<?, ?>) other;
-
-            if (left.getClass() == deep.left.getClass()) {
-                if (!middle.elementsEqual(deep.middle))
-                    return false;
-                return right.equals(deep.right);
-            }
-
             return Iterables.elementsEqual(this, other);
         }
 
