@@ -132,6 +132,12 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
         return some((A) value);
     }
 
+    public static <A> Option<A> checkIf(final A value, Predicate<? super A> predicate) {
+        if (predicate.apply(value))
+            return some(value);
+        return none();
+    }
+
     /**
      * Returns an Option that is empty.
      * 
