@@ -36,8 +36,6 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
 
     public abstract void print(StringBuilder sb, String padding, Printer<? super T> printer);
 
-    public abstract int getSize();
-
     public abstract Iterator<T> reverseIterator();
 
     public abstract FingerTreeNode<V, T> reverseAndMap(FingerTreeFactory<V, T> factory, Function<T, T> f);
