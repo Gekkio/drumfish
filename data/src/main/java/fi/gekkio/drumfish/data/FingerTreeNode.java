@@ -164,7 +164,7 @@ abstract class FingerTreeNode<V, T> implements Iterable<T>, Serializable {
         public DigitSplit<V, T> split(FingerTreeFactory<V, T> factory, Predicate<? super V> p, V accum) {
             V accumA = factory.mappend(accum, factory.measure(a));
             if (p.apply(accumA))
-                return new DigitSplit<V, T>(null, a, factory.digit(b));
+                return new DigitSplit<V, T>(null, a, factory.digit(b, c));
             V accumB = factory.mappend(accumA, factory.measure(b));
             if (p.apply(accumB))
                 return new DigitSplit<V, T>(factory.digit(a), b, factory.digit(c));
