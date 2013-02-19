@@ -1618,7 +1618,7 @@ public abstract class FingerTree<V, T> implements Iterable<T>, Serializable {
             if (tree == null)
                 synchronized (this) {
                     if (tree == null)
-                        tree = constructTree();
+                        tree = constructTree().unwrap();
                 }
             return tree;
         }
