@@ -430,7 +430,6 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
 
         @Override
         public T getOrElse(final T defaultValue) {
-            Preconditions.checkNotNull(defaultValue, "defaultValue cannot be null");
             return defaultValue;
         }
 
