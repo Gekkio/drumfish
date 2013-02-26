@@ -132,6 +132,11 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-jar-plugin</artifactId>
 					<version>${maven.jar.version}</version>
+					<configuration>
+						<excludes>
+							<exclude>**/rebel.xml</exclude>
+						</excludes>
+					</configuration>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
