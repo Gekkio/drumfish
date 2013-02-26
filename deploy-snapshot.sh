@@ -1,3 +1,3 @@
 #!/bin/sh
 
-mvn clean package javadoc:jar source:jar deploy
+mvn -Psnapshot clean package javadoc:jar source:jar deploy
