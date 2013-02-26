@@ -425,7 +425,7 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
         @Override
         public T getOrElse(final Supplier<? extends T> defaultValueSupplier) {
             Preconditions.checkNotNull(defaultValueSupplier, "defaultValueSupplier cannot be null");
-            return defaultValueSupplier.get();
+            return Preconditions.checkNotNull(defaultValueSupplier.get(), "value returned by defaultValueSupplier cannot be null");
         }
 
         @Override
@@ -485,7 +485,7 @@ public abstract class Option<T> implements Iterable<T>, Serializable {
         @Override
         public Option<T> orElse(final Supplier<Option<T>> defaultOptionSupplier) {
             Preconditions.checkNotNull(defaultOptionSupplier, "defaultOptionSupplier cannot be null");
-            return defaultOptionSupplier.get();
+            return Preconditions.checkNotNull(defaultOptionSupplier.get(), "option returned by defaultOptionSupplier cannot be null");
         }
 
         private Object readResolve() throws ObjectStreamException {
