@@ -10,7 +10,7 @@ import org.specs2.matcher.MatchResult
 import org.specs2.matcher.Matcher
 
 import com.google.common.base.{ Function => GuavaFunction }
-import com.google.common.io.NullOutputStream
+import com.google.common.io.ByteStreams
 
 import fi.gekkio.drumfish.lang.Effect
 
@@ -56,7 +56,7 @@ package object lang {
 
   val beSerializable: Matcher[AnyRef] = new Matcher[AnyRef] {
     def apply[S <: AnyRef](s: Expectable[S]): MatchResult[S] = {
-      val out = new ObjectOutputStream(new NullOutputStream)
+      val out = new ObjectOutputStream(ByteStreams.nullOutputStream())
       val success = try {
         out.writeObject(s.value)
         true
