@@ -16,10 +16,10 @@ The primary design goals of Drumfish are compile-time safety (which includes, bu
 ## What is included?
 Drumfish consists of four modules: *data*, *lang*, *frp*, and *validation*.
 
-Drumfish releases are available in Maven central under the groupId `fi.gekkio.drumfish`. Use Maven, or any Maven-compatible build tool to fetch the artifacts and include them inyour project.
+Drumfish releases are available in Maven central under the groupId `fi.gekkio.drumfish`. Use Maven, or any Maven-compatible build tool to fetch the artifacts and include them in your projects.
 
 ### Drumfish Lang
-Lang consists mainly of certain function interfaces, Option and Either types, and several useful reusable functions that operate on standard Java types.
+Lang consists of functional programming interfaces, Option and Either types, and several useful reusable functions that operate on standard Java types.
 
     <dependency>
       <groupId>fi.gekkio.drumfish</groupId>
@@ -50,7 +50,7 @@ FRP consists of a rich, composable API for Functional Reactive Programming.
 + Naming and behaviour of flatMap. The name is not directly intuitive, but is consistent with monadic patterns in Scala. The actual behaviour currently does switching, but with event streams another option is to instead collect all events from all past streams.
 + Drumfish FRP does not use a three-stream model (= events, errors, end-of-stream). Thus, it is simpler but less powerful than alternatives. On the other hand, it's possible to build a three-stream API on top of the current one.
 + Potential performance improvements. Right now all the API methods create new objects even though it could be avoided in some cases (e.g. calling distinct() twice)
-+ Thread-safety. Great care has been taken to ensure thread-safety of the implementation, but a careful analysis
++ Thread-safety. Great care has been taken to ensure thread-safety of the implementation, but a careful analysis is needed before the library can be claimed to be thread-safe.
 
 ### Drumfish Validation
 Validation provides a type-safe, composable validation API, which is inspired by the Validation type in [Scalaz](https://github.com/scalaz/scalaz), but removes a lot of abstraction in order to keep the API more usable in Java. The resulting API has a reasonable balance between abstraction and ease of use.

@@ -10,7 +10,7 @@
 	<artifactId>drumfish-data</artifactId>
 	<name>Drumfish :: Data</name>
 	<description>
-    Drumfish Data
+    Drumfish Data contains persistent immutable data structures.
 	</description>
 
 	<dependencies>
