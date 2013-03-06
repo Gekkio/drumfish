@@ -13,6 +13,12 @@ Drumfish is licensed under the Apache License, Version 2.0.
 ### Design goals
 The primary design goals of Drumfish are compile-time safety (which includes, but is not limited to type safety) and immutability. Maximizing compile-time safety in a software project makes large-scale refactoring possible, and can provide certain safety that tests cannot provide. Favoring immutability leads to thread-safe code, and usually leads to API design where tracking side effects and mutations is extremely simple.
 
+### Documentation
+
+[Release API documentation](http://gekkio.fi/apidocs/drumfish/0.1.0/).
+
+[Snapshot API documentation](http://gekkio.fi/apidocs/drumfish/0.2.0-SNAPSHOT/).
+
 ## What is included?
 Drumfish consists of four modules: *data*, *lang*, *frp*, and *validation*.
 
