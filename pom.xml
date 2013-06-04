@@ -20,7 +20,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-		<caliper.version>0.5-rc1</caliper.version>
+		<caliper.version>1.0-beta-1</caliper.version>
 		<guava.version>14.0.1</guava.version>
 		<jsr305.version>2.0.1</jsr305.version>
 		<junit.version>4.11</junit.version>

@@ -1,23 +1,16 @@
 package fi.gekkio.drumfish.data
 
-import com.google.caliper.Runner
-import fi.gekkio.drumfish.lang.Monoid
-import org.scalacheck.Gen
-import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
-import junit.framework.Test
 import com.google.caliper.Benchmark
-import com.google.caliper.SimpleBenchmark
-import com.google.common.collect.ImmutableList
-import scala.collection.JavaConverters._
 import com.google.caliper.Param
+import com.google.caliper.runner.CaliperMain
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.Iterables
 
 object FingerTreeCaliper {
-  def main(args: Array[String]) = Runner.main(classOf[FingerTreeCaliper], args)
+  def main(args: Array[String]) = CaliperMain.main(classOf[FingerTreeCaliper], args)
 }
 
-class FingerTreeCaliper extends SimpleBenchmark {
+class FingerTreeCaliper extends Benchmark {
 
   @Param(Array("10", "100", "1000"))
   private[this] var elementCount: Int = _
