@@ -15,7 +15,7 @@ class FingerTreeCaliper extends Benchmark {
   @Param(Array("10", "100", "1000"))
   private[this] var elementCount: Int = _
 
-  private[this] val initialTree = indexSeqFactory[Int].tree()
+  private[this] val initialTree = indexSeqTreeFactory[Int].tree()
   private[this] val initialList = ImmutableList.of[Int]()
 
   def timeFingerTreeAppend(reps: Int) = {

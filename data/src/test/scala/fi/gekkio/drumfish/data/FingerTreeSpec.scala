@@ -1,17 +1,15 @@
 package fi.gekkio.drumfish.data
 
+import scala.collection.JavaConverters.iterableAsScalaIterableConverter
+import scala.collection.JavaConverters.seqAsJavaListConverter
+
 import org.junit.runner.RunWith
+import org.scalacheck.Arbitrary
+import org.scalacheck.Gen
+import org.scalacheck.Gen.value
 import org.specs2.ScalaCheck
 import org.specs2.Specification
-import org.specs2.execute.Result
 import org.specs2.runner.JUnitRunner
-import java.io.PrintStream
-import java.io.ByteArrayOutputStream
-import fi.gekkio.drumfish.lang.Monoid
-import scala.collection.JavaConverters._
-import org.scalacheck.Gen
-import org.scalacheck.Arbitrary
-import org.scalacheck.Prop
 
 @RunWith(classOf[JUnitRunner])
 class FingerTreeSpec extends Specification with ScalaCheck {
@@ -32,7 +30,7 @@ class FingerTreeSpec extends Specification with ScalaCheck {
   } yield a.apply(b)
 
   implicit val arbitraryTree = Arbitrary {
-    indexSeqGen(Gen.posNum[Int])
+    indexSeqTreeGen(Gen.posNum[Int])
   }
 
   implicit val arbitraryOperation = Arbitrary { operationGen }
@@ -41,23 +39,23 @@ class FingerTreeSpec extends Specification with ScalaCheck {
     "FingerTree specification" ^
       "appending elements to tree must result in a tree with the exact same elements in the same order" ! check { elements: List[Int] =>
 
-        val tree = elements.foldLeft(indexSeqFactory[Int].tree()) { (t, e) => t.append(e) }
+        val tree = elements.foldLeft(indexSeqTreeFactory[Int].tree()) { (t, e) => t.append(e) }
         tree.asScala must containAllOf(elements).inOrder
       } ^
       "prepending elements to tree must result in a tree with the exact same elements in the same order" ! check { elements: List[Int] =>
 
-        val tree = elements.foldRight(indexSeqFactory[Int].tree()) { (e, t) =>
+        val tree = elements.foldRight(indexSeqTreeFactory[Int].tree()) { (e, t) =>
           t.prepend(e)
         }
         tree.asScala must containAllOf(elements).inOrder
       } ^
       "tree measure for indexSeq (= total size) must be correct" ! check { elements: List[Int] =>
-        val tree = indexSeqFactory[Int].tree(elements.asJava)
+        val tree = indexSeqTreeFactory[Int].tree(elements.asJava)
 
         tree.measure() must be_==(elements.size)
       } ^
       "performing any number of append/prepend operations must result in a tree with the correct elements" ! check { ops: List[Operation] =>
-        val tree = ops.foldLeft(indexSeqFactory[Int].tree()) { (tree, op) => op.execute(tree) }
+        val tree = ops.foldLeft(indexSeqTreeFactory[Int].tree()) { (tree, op) => op.execute(tree) }
 
         val elements = ops.collect {
           case Append(x) => x
@@ -68,8 +66,8 @@ class FingerTreeSpec extends Specification with ScalaCheck {
         tree.asScala must containAllOf(elements)
       } ^
       "concat must result in a tree that includes all elements, which are also in the correct order" ! check { elements: (List[Int], List[Int]) =>
-        val left = elements._1.foldLeft(indexSeqFactory[Int].tree()) { (t, e) => t.append(e) }
-        val right = elements._2.foldLeft(indexSeqFactory[Int].tree()) { (t, e) => t.append(e) }
+        val left = elements._1.foldLeft(indexSeqTreeFactory[Int].tree()) { (t, e) => t.append(e) }
+        val right = elements._2.foldLeft(indexSeqTreeFactory[Int].tree()) { (t, e) => t.append(e) }
         val allElements = elements._1 ++ elements._2
 
         val tree = left.concat(right)
@@ -79,8 +77,8 @@ class FingerTreeSpec extends Specification with ScalaCheck {
       } ^
       "elementsEqual must always return true for the same tree" ! check { tree: FingerTree[Int, Int] => tree.elementsEqual(tree) must beTrue } ^
       "equals must always return true for the same tree" ! check { elements: List[Int] =>
-        val first = indexSeqFactory[Int].tree(elements.asJava)
-        val second = elements.reverse.foldLeft(indexSeqFactory[Int].tree()) { (t, e) => t.prepend(e) }
+        val first = indexSeqTreeFactory[Int].tree(elements.asJava)
+        val second = elements.reverse.foldLeft(indexSeqTreeFactory[Int].tree()) { (t, e) => t.prepend(e) }
 
         first must be_==(second)
       } ^

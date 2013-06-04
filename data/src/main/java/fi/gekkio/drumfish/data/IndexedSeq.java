@@ -6,6 +6,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nullable;
+
 import lombok.val;
 
 import com.google.common.base.Function;
@@ -15,6 +18,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.UnmodifiableListIterator;
 
+import fi.gekkio.drumfish.lang.Function2;
 import fi.gekkio.drumfish.lang.Monoids;
 
 public class IndexedSeq<T> implements Iterable<T>, Serializable {
@@ -59,6 +63,10 @@ public class IndexedSeq<T> implements Iterable<T>, Serializable {
     @Override
     public Iterator<T> iterator() {
         return tree.iterator();
+    }
+
+    public Iterator<T> reverseIterator() {
+        return tree.reverseIterator();
     }
 
     public int indexOf(T value) {
@@ -181,6 +189,11 @@ public class IndexedSeq<T> implements Iterable<T>, Serializable {
         return new IndexedSeq<T>(tree.concat(other.tree));
     }
 
+    @CheckForNull
+    public <U> U foldLeft(@Nullable U initial, Function2<U, T, U> f) {
+        return tree.foldLeft(initial, f);
+    }
+
     private static Predicate<Integer> byIndex(final int index) {
         class ByIndexPredicate implements Predicate<Integer> {
             @Override
@@ -209,6 +222,10 @@ public class IndexedSeq<T> implements Iterable<T>, Serializable {
     @Override
     public String toString() {
         return tree.toString();
+    }
+
+    public IndexedSeq<T> reverse() {
+        return new IndexedSeq<T>(tree.reverse());
     }
 
 }

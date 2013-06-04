@@ -4,9 +4,9 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 
 import org.scalacheck.Gen
 
+import fi.gekkio.drumfish.data.FingerTree
 import fi.gekkio.drumfish.data.FingerTreeFactory
 import fi.gekkio.drumfish.lang.Monoid
-import lang.Monoid
 
 package object data {
 
@@ -23,12 +23,12 @@ package object data {
     def mappend(a: Int, b: Int) = a + b
   }
 
-  def indexSeqFactory[T]() = FingerTreeFactory.create(monoid, (x: T) => 1)
+  def indexSeqTreeFactory[T]() = FingerTreeFactory.create(monoid, (x: T) => 1)
 
-  def indexSeqGen[T](element: Gen[T]): Gen[FingerTree[Int, T]] = for {
+  def indexSeqTreeGen[T](element: Gen[T]): Gen[FingerTree[Int, T]] = for {
     elements <- Gen.listOf(element)
   } yield {
-    indexSeqFactory[T].tree(elements.asJava)
+    indexSeqTreeFactory[T].tree(elements.asJava)
   }
 
 }
