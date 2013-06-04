@@ -6,6 +6,7 @@ import javax.annotation.Nullable;
 
 import lombok.val;
 import lombok.experimental.Value;
+import lombok.experimental.Wither;
 
 /**
  * An immutable tuple of 3 elements.
@@ -18,6 +19,7 @@ import lombok.experimental.Value;
  *            third element type
  */
 @Value
+@Wither
 public class Tuple3<A, B, C> implements Serializable {
     private static final long serialVersionUID = -355430479757610793L;
 

@@ -6,6 +6,7 @@ import javax.annotation.Nullable;
 
 import lombok.val;
 import lombok.experimental.Value;
+import lombok.experimental.Wither;
 
 /**
  * An immutable tuple of 2 elements.
@@ -16,6 +17,7 @@ import lombok.experimental.Value;
  *            second element type
  */
 @Value
+@Wither
 public class Tuple2<A, B> implements Serializable {
     private static final long serialVersionUID = -8208726697294737183L;
 
